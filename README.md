@@ -31,7 +31,7 @@ Edit `.env` in your working directory:
 
 ```bash
 # LLM (optional — enables AI briefing, model radar, signals, weekly digest)
-LLM_PROVIDER=openai       # anthropic | openai | gemini | disabled
+LLM_PROVIDER=openai       # anthropic | openai | gemini | opencode | disabled
 LLM_API_KEY=sk-...
 LLM_MODEL=gpt-4.1         # optional override
 
@@ -78,7 +78,7 @@ A Jarvis-style HUD with:
 Connect an LLM for enhanced analysis:
 
 - **AI briefing** — summary, top stories, trends, model radar, signals
-- **Providers:** Anthropic Claude, OpenAI GPT, Google Gemini
+- **Providers:** Anthropic Claude, OpenAI GPT, Google Gemini, OpenCode Zen
 - Graceful fallback when LLM is unavailable
 
 ### Weekly Digest
@@ -125,13 +125,14 @@ All sources work **without API keys** (NewsAPI being the one exception — it si
 
 ### LLM Provider (optional)
 
-Set `LLM_PROVIDER` in `.env` to one of: `anthropic`, `openai`, `gemini`
+Set `LLM_PROVIDER` in `.env` to one of: `anthropic`, `openai`, `gemini`, `opencode`
 
 | Provider  | Env Var       | Default Model       |
 | --------- | ------------- | ------------------- |
 | anthropic | `LLM_API_KEY` | `claude-sonnet-4-6` |
 | openai    | `LLM_API_KEY` | `gpt-4.1`           |
 | gemini    | `LLM_API_KEY` | `gemini-2.5-flash`  |
+| opencode  | `LLM_API_KEY` | `gpt-5.6-luna`      |
 
 ## Architecture
 
@@ -167,11 +168,12 @@ ai-pulse/
 └── lib/
     ├── logger.mjs             # pino singleton
     ├── sweep-progress.mjs     # Sweep progress state machine
-    ├── llm/                   # LLM abstraction (3 providers, raw fetch — no SDKs)
+    ├── llm/                   # LLM abstraction (4 providers, raw fetch — no SDKs)
     │   ├── provider.mjs       # Base class
     │   ├── anthropic.mjs      # Claude
     │   ├── openai.mjs         # GPT
     │   ├── gemini.mjs         # Gemini
+    │   ├── opencode.mjs       # OpenCode Zen
     │   ├── analysis.mjs       # Per-sweep AI news analysis/synthesis
     │   ├── weekly-digest.mjs  # 7-day digest pipeline
     │   ├── budget.mjs         # Persistent daily budget (Europe/Brussels)
@@ -223,7 +225,7 @@ Runtime data is stored in your working directory under `.ai-pulse/` (hot memory 
 | -------------------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------- |
 | `PORT`                                       | `3200`       | Server port                                                                                                          |
 | `REFRESH_INTERVAL_MINUTES`                   | `15`         | Auto-refresh interval                                                                                                |
-| `LLM_PROVIDER`                               | `disabled`   | `anthropic`, `openai`, `gemini`, or `disabled`                                                                       |
+| `LLM_PROVIDER`                               | `disabled`   | `anthropic`, `openai`, `gemini`, `opencode`, or `disabled`                                                           |
 | `LLM_API_KEY`                                | —            | API key for LLM provider                                                                                             |
 | `LLM_MODEL`                                  | per-provider | Override model selection (e.g. `gpt-4.1`)                                                                            |
 | `GITHUB_TOKEN`                               | —            | GitHub PAT (optional, higher rate limits)                                                                            |
