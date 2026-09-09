@@ -37,10 +37,6 @@ function badgeClass(cat) {
   return map[cat] || "badge-news";
 }
 
-function sourceColor(name) {
-  return window.RenderCore.sourceColorFor(DOMAIN?.colors, name);
-}
-
 function formatNum(n) {
   return window.RenderCore.formatNum(n);
 }
@@ -737,12 +733,11 @@ function renderSourceChart(sourceCounts) {
     .slice(0, 6)
     .map(([name, count]) => {
       const h = Math.max(4, Math.round((count / maxCount) * 32));
-      const c = sourceColor(name);
       const abbrev = name
         .split(" ")
         .map((w) => w[0])
         .join("");
-      return `<div class="mini-bar" style="height:${h}px;background:${c}" title="${esc(name)}: ${count}"><span class="mini-bar-label">${abbrev}</span></div>`;
+      return `<div class="mini-bar" style="height:${h}px" title="${esc(name)}: ${count}"><span class="mini-bar-label">${abbrev}</span></div>`;
     })
     .join("");
 }

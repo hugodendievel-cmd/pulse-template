@@ -404,46 +404,9 @@ html.light .stat-icon {
 
 /* dendievel.me loading: paper page, big lowercase wordmark + caret,
    mono status line, hairline green progress bar. The HUD orb is history. */
-.loading-orb {
-  display: none;
-}
-
+.loading-orb,
 .orb-icon {
-  width: 48px;
-  height: 48px;
-  animation: orb-icon-spin 12s linear infinite;
-}
-
-@keyframes orb-icon-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes orb-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-12px);
-  }
-}
-
-@keyframes orb-glow {
-  from {
-    box-shadow:
-      0 0 40px rgba(32, 228, 103, 0.3),
-      0 0 80px rgba(32, 228, 103, 0.15);
-  }
-  to {
-    box-shadow:
-      0 0 60px rgba(32, 228, 103, 0.5),
-      0 0 120px rgba(32, 228, 103, 0.25);
-  }
+  display: none;
 }
 
 .loading-title {
@@ -1099,13 +1062,18 @@ html:not(.light) .icon-moon {
   background: var(--bg2);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 14px 16px;
+  padding: 16px 20px;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 18px;
   transition:
     border-color 0.2s,
     box-shadow 0.2s;
+}
+
+/* No iconography in the site's language — numbers carry the card */
+.stat-icon {
+  display: none;
 }
 
 .stat-card:hover {
@@ -1113,27 +1081,12 @@ html:not(.light) .icon-moon {
   box-shadow: var(--glow);
 }
 
-.stat-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  background: var(--bg3);
-  color: var(--muted);
-}
-
-.stat-icon svg {
-  opacity: 0.8;
-}
-
 .stat-number {
   font-size: 1.5rem;
   font-weight: 700;
   font-family: var(--mono);
   color: var(--text);
+  letter-spacing: -0.02em;
   line-height: 1;
 }
 
@@ -1167,6 +1120,8 @@ html:not(.light) .icon-moon {
   min-height: 2px;
   transition: height 0.4s ease;
   position: relative;
+  background: var(--accent);
+  opacity: 0.75;
 }
 
 .mini-bar-label {
@@ -2626,14 +2581,6 @@ html.light .theme-toggle .icon-moon {
 
   /* ⌘K kbd hint in the search trigger is also meaningless on touch. */
   .search-trigger kbd { display: none; }
-}
-
-@media (min-width: 1600px) {
-  .dashboard {
-    max-width: 1800px;
-    margin-left: auto;
-    margin-right: auto;
-  }
 }
 
 /* Ticker: keep original 300s scroll-left animation (see line 1038).
