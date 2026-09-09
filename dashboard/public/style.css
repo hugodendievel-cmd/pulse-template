@@ -1245,7 +1245,8 @@ html:not(.light) .icon-moon {
 }
 
 .panel-header {
-  padding: 14px 18px 8px;
+  padding: 13px 18px 11px;
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -1301,7 +1302,7 @@ html:not(.light) .icon-moon {
 }
 
 .panel-title {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-family: var(--font);
   color: var(--text);
   font-weight: 600;
@@ -1317,12 +1318,12 @@ html:not(.light) .icon-moon {
 }
 
 .panel-count {
-  font-size: 0.68rem;
+  font-size: 0.66rem;
   color: var(--muted);
   font-family: var(--mono);
   background: var(--bg3);
   padding: 2px 8px;
-  border-radius: 10px;
+  border-radius: 999px;
   font-weight: 500;
 }
 
