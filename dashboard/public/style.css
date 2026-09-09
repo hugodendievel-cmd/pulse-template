@@ -32,13 +32,13 @@
 }
 
 :root {
-  /* Core palette */
-  --bg: #08090d;
-  --bg2: #0f1117;
-  --bg3: #161820;
-  --bg4: #1c1e28;
-  --border: rgba(255, 255, 255, 0.06);
-  --border2: rgba(255, 255, 255, 0.1);
+  /* Core palette — dendievel.me terminal island */
+  --bg: #0a0d10;
+  --bg2: #131418;
+  --bg3: #191c22;
+  --bg4: #20242c;
+  --border: rgba(255, 255, 255, 0.08);
+  --border2: rgba(255, 255, 255, 0.14);
 
   /* Accent spectrum — dendievel.me green */
   --accent: #20e467;
@@ -52,11 +52,11 @@
   --pink: #f472b6;
   --orange: #fb923c;
 
-  /* Text hierarchy */
-  --text: #f1f5f9;
-  --text2: #cbd5e1;
-  --muted: #94a3b8;
-  --dim: #475569;
+  /* Text hierarchy — term-fg family */
+  --text: #e8e6df;
+  --text2: #c9c7bf;
+  --muted: #8a8f98;
+  --dim: #5f646d;
 
   /* Typography */
   --font:
@@ -76,8 +76,8 @@
   --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.3), 0 12px 40px rgba(0, 0, 0, 0.4);
 
   /* Digest panel */
-  --text-dim: #64748b;
-  --card: #0f1117;
+  --text-dim: #8a8f98;
+  --card: #131418;
 }
 
 html {
@@ -105,14 +105,18 @@ a:hover {
   text-decoration: none;
 }
 
-/* ────────────────── Light Theme ────────────────── */
+/* ────────────────── Light Theme — dendievel.me paper ────────────────── */
+/* Exact palette from dendievel.me/style.css:
+   paper #ebe8df · paper-soft #e2dfd5 · paper-warm #f3f0e7
+   ink #0a0a0a / #2a2a28 / #6a6a64 / #b6b3aa
+   green #20e467 (caret/fills) · green-deep #15a04a (links/accent) */
 html.light {
-  --bg: #f3f0e7;
-  --bg2: #fbfaf5;
-  --bg3: #ebe8df;
-  --bg4: #e2dfd5;
+  --bg: #ebe8df;
+  --bg2: #f3f0e7;
+  --bg3: #e2dfd5;
+  --bg4: #d8d5cb;
   --border: rgba(10, 10, 10, 0.08);
-  --border2: rgba(10, 10, 10, 0.14);
+  --border2: #b6b3aa;
   --accent: #15a04a;
   --accent2: #20e467;
   --cyan: #0891b2;
@@ -123,26 +127,31 @@ html.light {
   --purple: #7c3aed;
   --pink: #db2777;
   --orange: #ea580c;
-  --text: #0f172a;
-  --text2: #334155;
-  --muted: #64748b;
-  --dim: #94a3b8;
-  --glass: rgba(255, 255, 255, 0.7);
-  --glow: 0 0 20px rgba(21, 160, 74, 0.1);
-  --shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.05), 0 10px 30px rgba(0, 0, 0, 0.08);
+  --text: #0a0a0a;
+  --text2: #2a2a28;
+  --muted: #6a6a64;
+  --dim: #b6b3aa;
+  --glass: rgba(235, 232, 223, 0.85);
+  --glow: 0 6px 18px rgba(32, 228, 103, 0.18);
+  --shadow: 0 14px 36px rgba(10, 10, 10, 0.06);
+  --shadow-lg: 0 22px 50px rgba(10, 10, 10, 0.04);
 
   /* Digest panel */
-  --text-dim: #64748b;
-  --card: #fbfaf5;
+  --text-dim: #6a6a64;
+  --card: #f3f0e7;
 }
 
 html.light body {
   background: var(--bg);
 }
 
+/* Site links: green-deep on paper */
+html.light a {
+  color: var(--accent);
+}
+
 html.light .header {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(243, 240, 231, 0.92);
   border-bottom-color: var(--border2);
 }
 
@@ -273,13 +282,14 @@ html.light .search-trigger:hover {
 html.light .nav-pill {
   color: var(--muted);
   background: var(--bg2);
-  border-color: var(--ink-faint, rgba(10, 10, 10, 0.2));
+  border-color: var(--border2);
 }
 html.light .nav-pill:hover {
-  background: rgba(21, 160, 74, 0.12);
-  border-color: var(--accent);
+  background: rgba(32, 228, 103, 0.18);
+  border-color: #20e467;
   color: var(--text);
   transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(32, 228, 103, 0.18);
 }
 
 html.light .nav-pill.active {
@@ -1299,6 +1309,7 @@ html:not(.light) .icon-moon {
 
 /* ── Panel ── */
 .panel {
+  position: relative;
   background: var(--bg2);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -1310,6 +1321,25 @@ html:not(.light) .icon-moon {
     border-color 0.2s,
     box-shadow 0.3s,
     transform 0.2s;
+}
+
+/* dendievel.me project-card signature: green left accent bar on hover */
+.panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 0;
+  background: var(--accent2);
+  transition: height 0.25s ease;
+  z-index: 2;
+}
+.panel:hover::before {
+  height: 100%;
+}
+.panel:hover {
+  border-color: rgba(32, 228, 103, 0.45);
 }
 
 .panel:hover {

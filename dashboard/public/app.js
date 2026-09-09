@@ -264,7 +264,9 @@ function applyTheme(theme) {
   if (btn) btn.setAttribute("aria-pressed", theme === "light" ? "true" : "false");
 }
 function initTheme() {
-  const saved = localStorage.getItem("ai-pulse-theme") || "dark";
+  // Default light (dendievel.me paper); fall back to dark only via
+  // localStorage so returning visitors keep their choice.
+  const saved = localStorage.getItem("ai-pulse-theme") || "light";
   applyTheme(saved);
   const btn = document.getElementById("themeToggle");
   if (btn) {
