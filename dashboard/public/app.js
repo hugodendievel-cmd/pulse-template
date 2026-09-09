@@ -839,21 +839,17 @@ function renderTicker(sources) {
 
 // ── Panels (variant-dispatched, field-driven) ──
 function newsItemHtml(i) {
-  const c = sourceColor(i._source);
   const chipLabel = i.subreddit ? `r/${i.subreddit}` : i._source;
-  const chipStyle = i.subreddit
-    ? `background:${c}1f;color:${c}`
-    : `background:${c}22;color:${c}`;
   const author = i.author || i.creator;
   const time = timeAgo(i._time);
   return `
     <div class="news-item">
       <div class="news-title"><a href="${esc(i._url)}" target="_blank" rel="noopener">${esc(i.title || i.name)}</a></div>
       <div class="news-meta">
-        <span class="news-source" style="${chipStyle}">${esc(chipLabel)}</span>
+        <span class="news-source">${esc(chipLabel)}</span>
         ${i._score ? `<span class="news-score">▲ ${formatNum(i._score)}</span>` : ""}
         ${i._comments ? `<span>💬 ${formatNum(i._comments)}</span>` : ""}
-        ${i.flair ? `<span style="color:var(--purple)">${esc(i.flair)}</span>` : ""}
+        ${i.flair ? `<span class="news-flair">${esc(i.flair)}</span>` : ""}
         ${author ? `<span>${esc(author)}</span>` : ""}
         ${time ? `<span>${time}</span>` : ""}
       </div>
