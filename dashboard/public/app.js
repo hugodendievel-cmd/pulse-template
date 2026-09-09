@@ -154,7 +154,10 @@ function renderLoadingProgress(progress) {
 
 function completeLoading(nextData) {
   data = nextData;
-  render(data);
+  // If the domain chrome (from /api/domain) hasn't loaded yet, render() is a
+  // no-op — keep the loading screen up and let init() complete the render.
+  // Otherwise we'd show empty panel shells with an INIT status badge.
+  if (!render(data)) return;
   hideLoading();
   // Grace period: suppress one silent re-render so the dashboard doesn't
   // visibly refresh right after arriving (common with short refresh intervals).
@@ -680,8 +683,10 @@ function buildDomainUI(domain) {
 }
 
 // ── Main Render ──
+// Returns true if the dashboard was rendered, false when it had to bail
+// (no data yet, or the domain chrome hasn't been built by init()).
 function render(d) {
-  if (!d?.sweep || !DOMAIN) return;
+  if (!d?.sweep || !DOMAIN) return false;
   const sweep = d.sweep;
   const sources = sweep.sources || [];
   const RC = window.RenderCore;
@@ -701,6 +706,7 @@ function render(d) {
   renderAnalysis(d.analysis);
   renderIntegrity(sources);
   applyNavFilter();
+  return true;
 }
 
 // ── Periodic refresh of time-dependent UI ──
@@ -1264,6 +1270,15 @@ async function init() {
 
   // Fetch digest on load
   fetchDigest().catch(() => {}); // NOSONAR — browser script, not an ES module
+
+  // The SSE replay (or fallback fetch) may have delivered data while the
+  // domain chrome was still loading — completeLoading kept the loading screen
+  // up in that case. Render now; otherwise the page would wait for the next
+  // sweep update before showing anything.
+  if (data?.sweep && !loadingDone && render(data)) {
+    hideLoading();
+    postLoadGrace = true;
+  }
 }
 
 init();

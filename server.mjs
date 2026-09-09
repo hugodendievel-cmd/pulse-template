@@ -2,7 +2,8 @@
 import express from "express";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
-import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { readFileSync, readdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -30,10 +31,19 @@ import { createSweepProgressTracker } from "./lib/sweep-progress.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// Cache-busting version tag derived from package.json
-const PKG_VERSION = JSON.parse(
-  readFileSync(resolve(__dirname, "package.json"), "utf-8"),
-).version;
+// Cache-busting version tag: content hash of the public assets. A manual
+// package-version bump has twice ridden through asset-only changes, leaving
+// browsers on stale CSS/JS for up to an hour after deploy — hashing the files
+// makes any asset change produce new URLs automatically.
+const ASSET_VERSION = (() => {
+  const dir = resolve(__dirname, "dashboard", "public");
+  const hash = createHash("sha256");
+  for (const name of readdirSync(dir).sort()) {
+    hash.update(name);
+    hash.update(readFileSync(resolve(dir, name)));
+  }
+  return hash.digest("hex").slice(0, 12);
+})();
 
 // ── Branding injection (domain pack → index.html tokens) ──
 function escapeHtml(s) {
@@ -136,9 +146,9 @@ app.use(express.json());
 app.get("/", (_req, res) => {
   const htmlPath = resolve(__dirname, "dashboard", "public", "index.html");
   let html = readFileSync(htmlPath, "utf-8");
-  html = html.replace(/\.css"/g, `.css?v=${PKG_VERSION}"`);
-  html = html.replace(/\.js"/g, `.js?v=${PKG_VERSION}"`);
-  html = html.replace(/\.mjs"/g, `.mjs?v=${PKG_VERSION}"`);
+  html = html.replace(/\.css"/g, `.css?v=${ASSET_VERSION}"`);
+  html = html.replace(/\.js"/g, `.js?v=${ASSET_VERSION}"`);
+  html = html.replace(/\.mjs"/g, `.mjs?v=${ASSET_VERSION}"`);
   if (domain) {
     html = html
       .replaceAll("__PULSE_NAME_HTML__", pulseNameHtml(domain.name))
