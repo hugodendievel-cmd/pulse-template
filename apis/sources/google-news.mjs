@@ -1,4 +1,6 @@
 // apis/sources/google-news.mjs — Google News AI RSS (no key needed)
+// config: { queries?: string[] } — defaults preserve AI behavior
+// opts: { days?: number } — 1d/3d/7d window mapping (default 3)
 import { safeFetchText } from "../utils/fetch.mjs";
 import { parseRss } from "../utils/xml.mjs";
 
@@ -9,12 +11,13 @@ const QUERIES = [
   "AI+startup+funding",
 ];
 
-export async function briefing({ days = 3 } = {}) {
+export async function briefing(config = {}, { days = 3 } = {}) {
+  const queries = config.queries ?? QUERIES;
   let when = "3d";
   if (days <= 1) when = "1d";
   else if (days > 3) when = "7d";
   const results = await Promise.allSettled(
-    QUERIES.map((q) =>
+    queries.map((q) =>
       safeFetchText(
         `https://news.google.com/rss/search?q=${q}+when:${when}&hl=en-US&gl=US&ceid=US:en`,
         { timeout: 15000 },

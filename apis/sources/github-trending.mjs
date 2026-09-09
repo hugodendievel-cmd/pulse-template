@@ -1,24 +1,18 @@
 // apis/sources/github-trending.mjs — GitHub trending AI/ML repos (no key needed, token optional)
+// config: { query?: string, dateField?: "pushed"|"created" } — defaults preserve AI behavior
 import { env } from "../utils/env.mjs";
 import { safeFetch } from "../utils/fetch.mjs";
 
-const AI_TOPICS = [
-  "machine-learning",
-  "deep-learning",
-  "llm",
-  "artificial-intelligence",
-  "transformers",
-  "generative-ai",
-  "langchain",
-];
+const DEFAULT_QUERY =
+  'llm OR "large language model" OR "generative ai" language:python';
 
-export async function briefing() {
+export async function briefing(config = {}) {
   const headers = {};
   const token = env("GITHUB_TOKEN");
   if (token) headers.Authorization = `token ${token}`;
 
   const since = new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0];
-  const query = `llm OR "large language model" OR "generative ai" language:python pushed:>${since}`;
+  const query = `${config.query ?? DEFAULT_QUERY} ${config.dateField ?? "pushed"}:>${since}`;
   const url = `https://api.github.com/search/repositories?q=${encodeURIComponent(query)}&sort=stars&order=desc&per_page=20`;
 
   let repos = [];

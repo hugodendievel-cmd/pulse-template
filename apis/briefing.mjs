@@ -1,36 +1,49 @@
-// apis/briefing.mjs — Master orchestrator: runs all AI news sources in parallel
+// apis/briefing.mjs — Master orchestrator: runs the active domain pack's sources in parallel
+import { loadDomain } from "../domains/index.mjs";
 import log from "../lib/logger.mjs";
-import { briefing as arxiv } from "./sources/arxiv.mjs";
-import { briefing as githubTrending } from "./sources/github-trending.mjs";
-import { briefing as googleNews } from "./sources/google-news.mjs";
-import { briefing as hackernews } from "./sources/hackernews.mjs";
-import { briefing as huggingface } from "./sources/huggingface.mjs";
-import { briefing as newsapi } from "./sources/newsapi.mjs";
-import { briefing as producthunt } from "./sources/producthunt.mjs";
-import { briefing as reddit } from "./sources/reddit.mjs";
-import { briefing as simonwillison } from "./sources/simonwillison.mjs";
-import { briefing as techcrunch } from "./sources/techcrunch.mjs";
-import { briefing as theverge } from "./sources/theverge.mjs";
-import { briefing as venturebeat } from "./sources/venturebeat.mjs";
 import { sanitizeItem } from "./utils/sanitize.mjs";
 
-const SOURCES = [
-  { name: "Hacker News", fn: hackernews },
-  { name: "ArXiv", fn: arxiv },
-  { name: "Hugging Face", fn: huggingface },
-  { name: "GitHub Trending", fn: githubTrending },
-  { name: "TechCrunch", fn: techcrunch },
-  { name: "The Verge", fn: theverge },
-  { name: "VentureBeat", fn: venturebeat },
-  { name: "Reddit", fn: reddit },
-  { name: "Google News", fn: googleNews },
-  { name: "NewsAPI", fn: newsapi },
-  { name: "Product Hunt", fn: producthunt },
-  { name: "Simon Willison", fn: simonwillison },
-];
+// Pinned: resolved synchronously at import time from the env-selected pack
+// (PULSE_DOMAIN, default "ai") so diag.mjs, server.mjs (/api/health) and the
+// existing tests keep importing plain constants.
+const DEFAULT_PACK = loadDomain();
+export const SOURCE_COUNT = DEFAULT_PACK.sources.length;
+export const SOURCE_NAMES = DEFAULT_PACK.sources.map((s) => s.name);
 
-export const SOURCE_COUNT = SOURCES.length;
-export const SOURCE_NAMES = SOURCES.map(({ name }) => name);
+// Resolved source lists cached per pack id
+const resolvedCache = new Map();
+
+/**
+ * Resolve a pack's source list to [{ name, fn }] via dynamic import.
+ * fn = (opts) => mod.briefing(config ?? {}, opts) — config flows from the
+ * pack, opts from the caller (runDigestSweep passes { days: 7 }).
+ * A module that fails to import degrades to one errored source at sweep time
+ * (existing per-source error envelope), never a boot crash.
+ */
+async function resolveSources(pack) {
+  if (resolvedCache.has(pack.id)) return resolvedCache.get(pack.id);
+  const sources = await Promise.all(
+    pack.sources.map(async ({ name, module, config }) => {
+      try {
+        const mod = await import(`./sources/${module}.mjs`);
+        return { name, fn: (opts) => mod.briefing(config ?? {}, opts) };
+      } catch (err) {
+        log.warn(
+          { source: name, module, err: err.message },
+          "Source module failed to import",
+        );
+        return {
+          name,
+          fn: async () => {
+            throw err;
+          },
+        };
+      }
+    }),
+  );
+  resolvedCache.set(pack.id, sources);
+  return sources;
+}
 
 /** Sanitize all items returned by a source */
 function sanitizeSourceData(data) {
@@ -47,16 +60,17 @@ function sanitizeSourceData(data) {
   return data;
 }
 
-export async function runSweep(onProgress) {
+export async function runSweep(onProgress, { pack = DEFAULT_PACK } = {}) {
   const start = Date.now();
+  const sources = await resolveSources(pack);
   log.info(
-    { sources: SOURCES.length },
+    { sources: sources.length },
     "Sweep started — querying sources in parallel",
   );
 
   let done = 0;
   const results = await Promise.allSettled(
-    SOURCES.map(async (s) => {
+    sources.map(async (s) => {
       const t0 = Date.now();
       try {
         const data = await s.fn();
@@ -66,7 +80,7 @@ export async function runSweep(onProgress) {
         done++;
         onProgress?.({
           done,
-          total: SOURCES.length,
+          total: sources.length,
           source: s.name,
           status: "ok",
         });
@@ -77,7 +91,7 @@ export async function runSweep(onProgress) {
         done++;
         onProgress?.({
           done,
-          total: SOURCES.length,
+          total: sources.length,
           source: s.name,
           status: "error",
         });
@@ -86,20 +100,20 @@ export async function runSweep(onProgress) {
     }),
   );
 
-  const sources = results.map((r) =>
+  const sweepSources = results.map((r) =>
     r.status === "fulfilled" ? r.value : r.reason,
   );
-  const okCount = sources.filter((s) => s.status === "ok").length;
+  const okCount = sweepSources.filter((s) => s.status === "ok").length;
   const elapsed = ((Date.now() - start) / 1000).toFixed(1);
 
-  log.info({ ok: okCount, total: SOURCES.length, elapsed }, "Sweep complete");
+  log.info({ ok: okCount, total: sources.length, elapsed }, "Sweep complete");
 
   return {
     timestamp: new Date().toISOString(),
     sweepDurationMs: Date.now() - start,
     sourcesOk: okCount,
-    sourcesTotal: SOURCES.length,
-    sources,
+    sourcesTotal: sources.length,
+    sources: sweepSources,
   };
 }
 
@@ -108,13 +122,14 @@ export async function runSweep(onProgress) {
  * where supported (Google News, NewsAPI). Other sources return their
  * current hot/trending content which is inherently recent.
  */
-export async function runDigestSweep() {
+export async function runDigestSweep({ pack = DEFAULT_PACK } = {}) {
   const DIGEST_DAYS = 7;
   const start = Date.now();
+  const sources = await resolveSources(pack);
   log.info("Digest sweep started — fetching 7-day content from all sources");
 
   const results = await Promise.allSettled(
-    SOURCES.map(async (s) => {
+    sources.map(async (s) => {
       const t0 = Date.now();
       try {
         const data = await s.fn({ days: DIGEST_DAYS });
@@ -133,13 +148,13 @@ export async function runDigestSweep() {
     }),
   );
 
-  const sources = results.map((r) =>
+  const digestSources = results.map((r) =>
     r.status === "fulfilled" ? r.value : r.reason,
   );
-  const okCount = sources.filter((s) => s.status === "ok").length;
+  const okCount = digestSources.filter((s) => s.status === "ok").length;
 
   log.info(
-    { ok: okCount, total: SOURCES.length, ms: Date.now() - start },
+    { ok: okCount, total: sources.length, ms: Date.now() - start },
     "Digest sweep complete",
   );
 
@@ -147,8 +162,8 @@ export async function runDigestSweep() {
     timestamp: new Date().toISOString(),
     sweepDurationMs: Date.now() - start,
     sourcesOk: okCount,
-    sourcesTotal: SOURCES.length,
-    sources,
+    sourcesTotal: sources.length,
+    sources: digestSources,
   };
 }
 

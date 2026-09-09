@@ -1,4 +1,5 @@
 // apis/sources/reddit.mjs — Reddit AI subreddits (OAuth when configured, public fallback)
+// config: { subreddits?: string[] } — defaults preserve AI behavior
 import log from "../../lib/logger.mjs";
 import { safeFetch } from "../utils/fetch.mjs";
 
@@ -73,12 +74,13 @@ async function getOAuthToken() {
   }
 }
 
-export async function briefing() {
+export async function briefing(config = {}) {
+  const subs = config.subreddits ?? SUBREDDITS;
   const token = await getOAuthToken();
   const useOAuth = !!token;
 
   const results = await Promise.allSettled(
-    SUBREDDITS.map((sub) => {
+    subs.map((sub) => {
       const url = useOAuth
         ? `https://oauth.reddit.com/r/${sub}/hot?limit=15`
         : `https://www.reddit.com/r/${sub}/hot.json?limit=15`;
@@ -98,7 +100,7 @@ export async function briefing() {
       if (d.stickied) continue;
       items.push({
         title: d.title,
-        subreddit: SUBREDDITS[i],
+        subreddit: subs[i],
         score: d.score,
         comments: d.num_comments,
         author: d.author,

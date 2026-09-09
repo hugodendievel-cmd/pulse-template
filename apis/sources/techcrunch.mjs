@@ -1,4 +1,6 @@
 // apis/sources/techcrunch.mjs — TechCrunch AI RSS (no key needed)
+// config: { feedUrl?: string, keywords?: string } — keywords is a RegExp source
+// string; defaults preserve AI behavior
 import { safeFetchText } from "../utils/fetch.mjs";
 import { parseRss } from "../utils/xml.mjs";
 
@@ -8,10 +10,13 @@ const FEED_URL =
 const AI_KEYWORDS =
   /\b(ai|llm|gpt|claude|anthropic|openai|google|meta|microsoft|nvidia|startup|acquisition|funding|launch|model|chatbot|copilot|agent|generative)\b/i;
 
-export async function briefing() {
-  const xml = await safeFetchText(FEED_URL, { timeout: 15000 });
+export async function briefing(config = {}) {
+  const keywords = new RegExp(config.keywords ?? AI_KEYWORDS.source, "i");
+  const xml = await safeFetchText(config.feedUrl ?? FEED_URL, {
+    timeout: 15000,
+  });
   const items = parseRss(xml).filter(
-    (i) => AI_KEYWORDS.test(i.title) || AI_KEYWORDS.test(i.description),
+    (i) => keywords.test(i.title) || keywords.test(i.description),
   );
 
   return {

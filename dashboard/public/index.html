@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI Pulse — Intelligence Dashboard</title>
+    <title>__PULSE_NAME__ — Intelligence Dashboard</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <meta name="theme-color" content="#6366f1" />
-    <meta name="description" content="AI Pulse — real-time intelligence dashboard tracking LLM releases, papers, models, and community signals across 12 sources." />
+    <meta name="description" content="__PULSE_NAME__ — __PULSE_TAGLINE__" />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -184,7 +184,7 @@
         </svg>
       </div>
       <div class="loading-stage" id="loadingStage">INITIALIZING</div>
-      <div class="loading-title">AI<span>PULSE</span></div>
+      <div class="loading-title">__PULSE_NAME_HTML__</div>
       <div class="loading-sub">Preparing live intelligence sweep…</div>
       <div class="loading-meta">
         <span id="loadingPercent">0%</span>
@@ -235,17 +235,9 @@
               </g>
             </svg>
           </div>
-          <h1>AI<span>PULSE</span></h1>
+          <h1>__PULSE_NAME_HTML__</h1>
         </div>
-        <nav class="header-nav" id="headerNav">
-          <button class="nav-pill active" data-filter="all">All</button>
-          <button class="nav-pill" data-filter="briefing">Briefing</button>
-          <button class="nav-pill" data-filter="news">News</button>
-          <button class="nav-pill" data-filter="research">Research</button>
-          <button class="nav-pill" data-filter="code">Code</button>
-          <button class="nav-pill" data-filter="community">Community</button>
-          <button class="nav-pill" data-filter="digest">Digest</button>
-        </nav>
+        <nav class="header-nav" id="headerNav"></nav>
       </div>
       <div class="header-right">
         <button class="search-trigger" id="searchTrigger" title="Search (⌘K)">
@@ -366,271 +358,11 @@
     <!-- News Ticker -->
     <div class="ticker"><div class="ticker-inner" id="ticker"></div></div>
 
-    <!-- Stats Bar -->
-    <div class="stats-bar" id="statsBar" style="display: none">
-      <div class="stat-card">
-        <div class="stat-icon stat-icon-articles">
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path
-              d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-            />
-            <polyline points="14 2 14 8 20 8" />
-            <line x1="16" y1="13" x2="8" y2="13" />
-            <line x1="16" y1="17" x2="8" y2="17" />
-          </svg>
-        </div>
-        <div>
-          <div class="stat-number" id="statArticles">0</div>
-          <div class="stat-label">Articles</div>
-        </div>
-        <div class="mini-chart" id="chartSources"></div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon stat-icon-models">
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M12 2L2 7l10 5 10-5-10-5z" />
-            <path d="M2 17l10 5 10-5" />
-            <path d="M2 12l10 5 10-5" />
-          </svg>
-        </div>
-        <div>
-          <div class="stat-number" id="statModels">0</div>
-          <div class="stat-label">Models</div>
-        </div>
-        <div>
-          <div class="stat-sub" id="statTopPipeline">—</div>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon stat-icon-papers">
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-          </svg>
-        </div>
-        <div>
-          <div class="stat-number" id="statPapers">0</div>
-          <div class="stat-label">Papers</div>
-        </div>
-        <div>
-          <div class="stat-sub" id="statTopCat">—</div>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon stat-icon-repos">
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path
-              d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"
-            />
-          </svg>
-        </div>
-        <div>
-          <div class="stat-number" id="statRepos">0</div>
-          <div class="stat-label">Repos</div>
-        </div>
-        <div>
-          <div class="stat-sub" id="statTotalStars">—</div>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div
-          class="freshness-ring"
-          id="freshnessRing"
-          style="background: conic-gradient(var(--green) 0%, var(--bg3) 0%)"
-        >
-          <span id="freshnessVal">—</span>
-        </div>
-        <div>
-          <div class="stat-label">Freshness</div>
-          <div class="stat-sub" id="freshnessSub">—</div>
-        </div>
-      </div>
-    </div>
+    <!-- Stats Bar (cards built at runtime from /api/domain; freshness ring appended last) -->
+    <div class="stats-bar" id="statsBar" style="display: none"></div>
 
-    <!-- Dashboard Grid -->
-    <div class="dashboard" id="dashboard">
-      <!-- AI Briefing: Summary + Top Stories -->
-      <div
-        class="panel col-8 fade-in"
-        id="analysisPanel"
-        data-section="briefing"
-        style="display: none"
-      >
-        <div class="panel-header">
-          <span class="panel-title"
-            ><svg class="panel-icon" width="16" height="16" aria-hidden="true" focusable="false"><use href="#ic-brain"/></svg> AI Briefing</span
-          >
-          <span class="panel-count" id="analysisProvider"></span>
-        </div>
-        <div class="panel-body" id="analysisBody"></div>
-      </div>
-
-      <!-- AI Radar: Model Radar + Signals -->
-      <div
-        class="panel col-4 fade-in"
-        id="radarPanel"
-        data-section="briefing"
-        style="display: none"
-      >
-        <div class="panel-header">
-          <span class="panel-title"
-            ><svg class="panel-icon" width="16" height="16" aria-hidden="true" focusable="false"><use href="#ic-radar"/></svg> Radar</span
-          >
-          <span class="panel-count" id="radarCount">—</span>
-        </div>
-        <div class="panel-body" id="radarBody"></div>
-      </div>
-
-      <!-- Trending AI News -->
-      <div class="panel col-6 fade-in" data-section="news">
-        <div class="panel-header">
-          <span class="panel-title"
-            ><svg class="panel-icon" width="16" height="16" aria-hidden="true" focusable="false"><use href="#ic-flame"/></svg> Trending</span
-          >
-          <span class="panel-count" id="trendingCount">—</span>
-        </div>
-        <div class="panel-body" id="trendingBody"></div>
-      </div>
-
-      <!-- Newest AI News -->
-      <div class="panel col-6 fade-in" data-section="news">
-        <div class="panel-header">
-          <span class="panel-title"
-            ><svg class="panel-icon" width="16" height="16" aria-hidden="true" focusable="false"><use href="#ic-sparkles"/></svg> Newest</span
-          >
-          <span class="panel-count" id="newsCount">—</span>
-        </div>
-        <div class="panel-body" id="newsBody"></div>
-      </div>
-
-      <!-- Trending Models (Hugging Face) -->
-      <div class="panel col-6 fade-in" data-section="research">
-        <div class="panel-header">
-          <span class="panel-title"
-            ><svg class="panel-icon" width="16" height="16" aria-hidden="true" focusable="false"><use href="#ic-cube"/></svg> Trending Models</span
-          >
-          <span class="panel-count" id="modelsCount">—</span>
-        </div>
-        <div class="panel-body" id="modelsBody"></div>
-      </div>
-
-      <!-- ArXiv Papers -->
-      <div class="panel col-6 fade-in" data-section="research">
-        <div class="panel-header">
-          <span class="panel-title"
-            ><svg class="panel-icon" width="16" height="16" aria-hidden="true" focusable="false"><use href="#ic-paper"/></svg> Latest Papers</span
-          >
-          <span class="panel-count" id="papersCount">—</span>
-        </div>
-        <div class="panel-body" id="papersBody"></div>
-      </div>
-
-      <!-- GitHub Trending -->
-      <div class="panel col-6 fade-in" data-section="code">
-        <div class="panel-header">
-          <span class="panel-title"
-            ><svg class="panel-icon" width="16" height="16" aria-hidden="true" focusable="false"><use href="#ic-code"/></svg> GitHub Trending</span
-          >
-          <span class="panel-count" id="reposCount">—</span>
-        </div>
-        <div class="panel-body" id="reposBody"></div>
-      </div>
-
-      <!-- Simon Willison -->
-      <div class="panel col-6 fade-in" data-section="community">
-        <div class="panel-header">
-          <span class="panel-title"
-            ><svg class="panel-icon" width="16" height="16" aria-hidden="true" focusable="false"><use href="#ic-pen"/></svg> Simon Willison</span
-          >
-          <span class="panel-count" id="blogCount">—</span>
-        </div>
-        <div class="panel-body" id="blogBody"></div>
-      </div>
-
-      <!-- Reddit -->
-      <div class="panel col-4 fade-in" data-section="community">
-        <div class="panel-header">
-          <span class="panel-title"
-            ><svg class="panel-icon" width="16" height="16" aria-hidden="true" focusable="false"><use href="#ic-chat"/></svg> Reddit</span
-          >
-          <span class="panel-count" id="redditCount">—</span>
-        </div>
-        <div class="panel-body" id="redditBody"></div>
-      </div>
-
-      <!-- Hacker News -->
-      <div class="panel col-4 fade-in" data-section="community">
-        <div class="panel-header">
-          <span class="panel-title"
-            ><svg class="panel-icon" width="16" height="16" aria-hidden="true" focusable="false"><use href="#ic-hexagon"/></svg> Hacker News</span
-          >
-          <span class="panel-count" id="hnCount">—</span>
-        </div>
-        <div class="panel-body" id="hnBody"></div>
-      </div>
-
-      <!-- Product Hunt -->
-      <div class="panel col-4 fade-in" data-section="community">
-        <div class="panel-header">
-          <span class="panel-title"
-            ><svg class="panel-icon" width="16" height="16" aria-hidden="true" focusable="false"><use href="#ic-rocket"/></svg> Product Hunt AI</span
-          >
-          <span class="panel-count" id="phCount">—</span>
-        </div>
-        <div class="panel-body" id="phBody"></div>
-      </div>
-
-      <!-- Weekly Digest -->
-      <div
-        class="panel col-12 fade-in digest-panel"
-        id="digestPanel"
-        data-section="digest"
-        style="display: none"
-      >
-        <div class="panel-header">
-          <span class="panel-title"
-            ><svg class="panel-icon" width="16" height="16" aria-hidden="true" focusable="false"><use href="#ic-list"/></svg> Weekly AI Digest</span
-          >
-          <span class="digest-meta" id="digestMeta"></span>
-        </div>
-        <div class="panel-body digest-body" id="digestBody">
-          <div class="digest-empty">
-            <p>No digest generated yet.</p>
-            <button class="digest-generate-btn" id="digestGenerateBtn">
-              Generate Weekly Digest
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- Dashboard Grid (panels built at runtime from /api/domain) -->
+    <div class="dashboard" id="dashboard"></div>
 
     <!-- Footer -->
     <footer class="footer">
@@ -676,6 +408,11 @@
       </div>
     </div>
 
+    <!-- Pure render core → window.RenderCore (used by app.js, unit-tested directly) -->
+    <script type="module">
+      import * as RC from "./render-core.mjs";
+      window.RenderCore = RC;
+    </script>
     <script src="app.js"></script>
   </body>
 </html>

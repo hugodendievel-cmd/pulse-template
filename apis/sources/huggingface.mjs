@@ -1,7 +1,8 @@
 // apis/sources/huggingface.mjs — Hugging Face trending models (no key needed)
 import { safeFetch } from "../utils/fetch.mjs";
 
-export async function briefing() {
+// config unused — Hugging Face has no domain filter; uniform signature for the pack orchestrator
+export async function briefing(config = {}, opts = {}) {
   const [models, datasets] = await Promise.allSettled([
     safeFetch(
       "https://huggingface.co/api/models?sort=trendingScore&direction=-1&limit=20",

@@ -12,6 +12,7 @@ import {
   SOURCE_NAMES,
 } from "./apis/briefing.mjs";
 import "./apis/utils/env.mjs";
+import { loadDomain } from "./domains/index.mjs";
 import { computeDelta, getPrevious, pushSweep } from "./lib/delta/index.mjs";
 import { loadLatestDigest, saveDigest } from "./lib/digest/store.mjs";
 import { weekIdBrussels } from "./lib/digest/week-id.mjs";
@@ -34,6 +35,24 @@ const PKG_VERSION = JSON.parse(
   readFileSync(resolve(__dirname, "package.json"), "utf-8"),
 ).version;
 
+// ── Branding injection (domain pack → index.html tokens) ──
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+// "AI Pulse" → AI<span>PULSE</span> (first word plain, rest uppercased in
+// the span — reproduces the original logo/loading markup for any pack name).
+function pulseNameHtml(name) {
+  const words = escapeHtml(name).split(" ");
+  const first = words.shift();
+  const rest = words.join(" ").toUpperCase();
+  return rest ? `${first}<span>${rest}</span>` : first;
+}
+
 const PORT = Number.parseInt(process.env.PORT || "3200", 10);
 const REFRESH_MS =
   Number.parseInt(process.env.REFRESH_INTERVAL_MINUTES || "15", 10) * 60_000;
@@ -53,6 +72,7 @@ const MAX_LLM_CALLS_PER_DAY = Number.parseInt(
 
 let currentData = null;
 let llm = null;
+let domain = null; // active domain pack, set in boot()
 let sweepCount = 0;
 let lastSweepTime = null;
 let lastSweepDurationMs = null;
@@ -99,12 +119,19 @@ app.use(
 
 app.use(express.json());
 
-// ── Serve index.html with cache-busted asset URLs ──
+// ── Serve index.html with cache-busted asset URLs + pack branding ──
 app.get("/", (_req, res) => {
   const htmlPath = resolve(__dirname, "dashboard", "public", "index.html");
   let html = readFileSync(htmlPath, "utf-8");
   html = html.replace(/\.css"/g, `.css?v=${PKG_VERSION}"`);
   html = html.replace(/\.js"/g, `.js?v=${PKG_VERSION}"`);
+  html = html.replace(/\.mjs"/g, `.mjs?v=${PKG_VERSION}"`);
+  if (domain) {
+    html = html
+      .replaceAll("__PULSE_NAME_HTML__", pulseNameHtml(domain.name))
+      .replaceAll("__PULSE_NAME__", escapeHtml(domain.name))
+      .replaceAll("__PULSE_TAGLINE__", escapeHtml(domain.tagline ?? ""));
+  }
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Content-Type", "text/html");
   res.send(html);
@@ -124,6 +151,15 @@ app.get("/api/data", (_req, res) => {
   if (!currentData)
     return res.status(503).json({ error: "First sweep in progress" });
   res.json(currentData);
+});
+
+// Active domain pack chrome: panels/stats/nav/colors/branding for the
+// dashboard to build itself from. No sources/prompts/freshSources leakage.
+app.get("/api/domain", (_req, res) => {
+  if (!domain)
+    return res.status(503).json({ error: "Domain pack not loaded yet" });
+  const { name, tagline, panels, stats, nav, colors } = domain;
+  res.json({ name, tagline, panels, stats, nav, colors });
 });
 
 app.get("/api/health", (_req, res) => {
@@ -195,7 +231,10 @@ app.post("/api/digest/generate", async (req, res) => {
     // Run a dedicated 7-day sweep across all sources
     const sweepData = await runDigestSweep();
     incrementBudget();
-    const digest = await generateWeeklyDigest(llm, sweepData);
+    const digest = await generateWeeklyDigest(llm, sweepData, {
+      prompt: domain.prompts.digest,
+      freshSources: domain.freshSources,
+    });
     if (!digest)
       return res.status(500).json({ error: "Digest generation failed" });
 
@@ -333,7 +372,9 @@ async function runLLMAnalysis(sweepData) {
 
   try {
     incrementBudget();
-    const analysis = await analyzeWithLLM(llm, sweepData);
+    const analysis = await analyzeWithLLM(llm, sweepData, {
+      prompt: domain.prompts.analysis,
+    });
     if (analysis) {
       const { count } = loadBudget();
       log.info({ llmCallsToday: count }, "LLM analysis complete");
@@ -426,6 +467,10 @@ async function sweep() {
 // ── Boot ──
 let server;
 async function boot() {
+  // Active domain pack (PULSE_DOMAIN, default "ai") — throws on unknown ids
+  domain = loadDomain();
+  log.info({ domain: domain.id, name: domain.name }, "Domain pack loaded");
+
   try {
     llm = await createLLMProvider();
     if (llm)

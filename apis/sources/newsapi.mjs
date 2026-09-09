@@ -1,4 +1,6 @@
 // apis/sources/newsapi.mjs — NewsAPI.org AI headlines (requires NEWSAPI_KEY)
+// config: { query?: string } — defaults preserve AI behavior
+// opts: { days?: number } — sets the `from` param when provided
 import { env } from "../utils/env.mjs";
 import { safeFetch } from "../utils/fetch.mjs";
 
@@ -7,7 +9,7 @@ const QUERY =
   "artificial intelligence OR LLM OR large language model OR OpenAI OR generative AI";
 const PAGE_SIZE = 30;
 
-export async function briefing({ days } = {}) {
+export async function briefing(config = {}, { days } = {}) {
   const apiKey = env("NEWSAPI_KEY");
   if (!apiKey) {
     return {
@@ -20,7 +22,7 @@ export async function briefing({ days } = {}) {
   }
 
   const url = new URL(BASE);
-  url.searchParams.set("q", QUERY);
+  url.searchParams.set("q", config.query ?? QUERY);
   url.searchParams.set("sortBy", "publishedAt");
   url.searchParams.set("pageSize", String(PAGE_SIZE));
   url.searchParams.set("language", "en");

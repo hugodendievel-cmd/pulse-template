@@ -1,5 +1,58 @@
+// app.js — domain-agnostic dashboard client. Panels, nav pills, stat cards
+// and source colors are all built at runtime from GET /api/domain; item
+// rendering binds to normalized fields (via window.RenderCore), never to
+// source names.
+
 // ── State ──
 let data = null;
+let DOMAIN = null; // active domain pack chrome, fetched at boot
+
+// ── Helpers ──
+function esc(s) {
+  const d = document.createElement("div");
+  d.textContent = s || "";
+  return d.innerHTML;
+}
+
+function timeAgo(iso) {
+  if (!iso) return "";
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
+// Categories are engine vocabulary, not pack data — stays hardcoded.
+function badgeClass(cat) {
+  const map = {
+    news: "badge-news",
+    research: "badge-research",
+    models: "badge-model",
+    community: "badge-community",
+    code: "badge-code",
+    products: "badge-products",
+  };
+  return map[cat] || "badge-news";
+}
+
+function sourceColor(name) {
+  return window.RenderCore.sourceColorFor(DOMAIN?.colors, name);
+}
+
+function formatNum(n) {
+  return window.RenderCore.formatNum(n);
+}
+
+// Inline SVGs for the runtime-built stat cards (1:1 with the original
+// hardcoded dashboard markup).
+const STAT_ICONS = {
+  articles: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
+  models: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>`,
+  papers: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`,
+  repos: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>`,
+};
 
 // ── Loading animation (live progress via SSE) ──
 const loadingBar = document.getElementById("loadingBar");
@@ -171,7 +224,7 @@ async function fallbackFetch() {
       const d = await res.json();
       if (loadingDone) {
         data = d;
-        render(data);
+        render(d);
       } else {
         completeLoading(d);
       }
@@ -210,7 +263,7 @@ function applyTheme(theme) {
   const btn = document.getElementById("themeToggle");
   if (btn) btn.setAttribute("aria-pressed", theme === "light" ? "true" : "false");
 }
-(function initTheme() {
+function initTheme() {
   const saved = localStorage.getItem("ai-pulse-theme") || "dark";
   applyTheme(saved);
   const btn = document.getElementById("themeToggle");
@@ -224,10 +277,10 @@ function applyTheme(theme) {
       applyTheme(current === "dark" ? "light" : "dark");
     });
   }
-})();
+}
 
 // ── Keyboard shortcuts modal ──
-(function initKeyboardHelp() {
+function initKeyboardHelp() {
   const overlay = document.getElementById("kbdOverlay");
   const openBtn = document.getElementById("kbdHelpBtn");
   const closeBtn = document.getElementById("kbdClose");
@@ -268,7 +321,7 @@ function applyTheme(theme) {
       if (btn) btn.click();
     }
   });
-})();
+}
 
 // ── Nav Filter ──
 function applyNavFilter() {
@@ -290,7 +343,7 @@ function applyNavFilter() {
   });
 }
 
-(function initNav() {
+function initNav() {
   const nav = document.getElementById("headerNav");
   if (!nav) return;
   nav.addEventListener("click", (e) => {
@@ -303,10 +356,10 @@ function applyNavFilter() {
     applyNavFilter();
     nav.classList.remove("open");
   });
-})();
+}
 
 // ── Panel Collapse ──
-(function initPanelCollapse() {
+function initPanelCollapse() {
   const STORAGE_KEY = "ai-pulse-collapsed";
 
   function getCollapsed() {
@@ -399,10 +452,10 @@ function applyNavFilter() {
   }
 
   syncCollapseAllBtn();
-})();
+}
 
 // ── Hamburger Menu ──
-(function initHamburger() {
+function initHamburger() {
   const btn = document.getElementById("hamburgerBtn");
   const nav = document.getElementById("headerNav");
   if (!btn || !nav) return;
@@ -448,10 +501,10 @@ function applyNavFilter() {
       nav.classList.remove("open");
     }
   });
-})();
+}
 
 // ── Command Palette (Search) ──
-(function initSearch() {
+function initSearch() {
   const overlay = document.getElementById("commandOverlay");
   const input = document.getElementById("commandInput");
   const results = document.getElementById("commandResults");
@@ -544,66 +597,110 @@ function applyNavFilter() {
     }
     renderSearchResults(allItems);
   });
-})();
-
-// ── Helpers ──
-function esc(s) {
-  const d = document.createElement("div");
-  d.textContent = s || "";
-  return d.innerHTML;
 }
 
-function timeAgo(iso) {
-  if (!iso) return "";
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
-}
+// ── Domain chrome (nav pills, stat cards, panels — built from /api/domain) ──
+function buildDomainUI(domain) {
+  const nav = document.getElementById("headerNav");
+  if (nav) {
+    nav.innerHTML = domain.nav
+      .map(
+        (n, i) =>
+          `<button class="nav-pill${i === 0 ? " active" : ""}" data-filter="${esc(n.filter)}">${esc(n.label)}</button>`,
+      )
+      .join("");
+  }
 
-function badgeClass(cat) {
-  const map = {
-    news: "badge-news",
-    research: "badge-research",
-    models: "badge-model",
-    community: "badge-community",
-    code: "badge-code",
-    products: "badge-products",
-  };
-  return map[cat] || "badge-news";
-}
+  const statsBar = document.getElementById("statsBar");
+  if (statsBar) {
+    statsBar.innerHTML =
+      domain.stats
+        .map((s) => {
+          const iconSvg =
+            STAT_ICONS[s.icon] ??
+            '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"></svg>';
+          return `<div class="stat-card">
+        <div class="stat-icon stat-icon-${esc(s.icon)}">${iconSvg}</div>
+        <div>
+          <div class="stat-number" id="stat-${esc(s.key)}">0</div>
+          <div class="stat-label">${esc(s.label)}</div>
+        </div>
+        ${s.chart ? '<div class="mini-chart" id="chartSources"></div>' : `<div>\n          <div class="stat-sub" id="stat-${esc(s.key)}-sub">—</div>\n        </div>`}
+      </div>`;
+        })
+        .join("") +
+      `<div class="stat-card">
+        <div
+          class="freshness-ring"
+          id="freshnessRing"
+          style="background: conic-gradient(var(--green) 0%, var(--bg3) 0%)"
+        >
+          <span id="freshnessVal">—</span>
+        </div>
+        <div>
+          <div class="stat-label">Freshness</div>
+          <div class="stat-sub" id="freshnessSub">—</div>
+        </div>
+      </div>`;
+  }
 
-function sourceColor(name) {
-  const map = {
-    TechCrunch: "#34d399",
-    "The Verge": "#f472b6",
-    VentureBeat: "#60a5fa",
-    "Google News": "#fbbf24",
-    "Hacker News": "#fb923c",
-    Reddit: "#f87171",
-    ArXiv: "#a78bfa",
-    "Hugging Face": "#fbbf24",
-    "GitHub Trending": "#60a5fa",
-    "Product Hunt": "#fb923c",
-    "Simon Willison": "#38bdf8",
-  };
-  return map[name] || "#94a3b8";
-}
-
-function formatNum(n) {
-  if (!n) return "0";
-  if (n >= 1000000) return (n / 1000000).toFixed(1) + "M";
-  if (n >= 1000) return (n / 1000).toFixed(1) + "K";
-  return n.toString();
+  const dash = document.getElementById("dashboard");
+  if (dash) {
+    dash.innerHTML = domain.panels
+      .map((p) => {
+        // Fixed-id exceptions keep the existing LLM/digest code untouched.
+        let panelId = `panel-${p.id}`;
+        let extraClass = "";
+        let extraStyle = "";
+        let headerRight = `<span class="panel-count" id="count-${esc(p.id)}">—</span>`;
+        let bodyClass = "panel-body";
+        let bodyId = `body-${p.id}`;
+        let bodyContent = "";
+        if (p.variant === "briefing") {
+          panelId = "analysisPanel";
+          extraStyle = ' style="display: none"';
+          headerRight = `<span class="panel-count" id="analysisProvider"></span>`;
+          bodyId = "analysisBody";
+        } else if (p.variant === "radar") {
+          panelId = "radarPanel";
+          extraStyle = ' style="display: none"';
+          headerRight = `<span class="panel-count" id="radarCount">—</span>`;
+          bodyId = "radarBody";
+        } else if (p.variant === "digest") {
+          panelId = "digestPanel";
+          extraClass = " digest-panel";
+          extraStyle = ' style="display: none"';
+          headerRight = `<span class="digest-meta" id="digestMeta"></span>`;
+          bodyClass = "panel-body digest-body";
+          bodyId = "digestBody";
+          bodyContent = `<div class="digest-empty">
+            <p>No digest generated yet.</p>
+            <button class="digest-generate-btn" id="digestGenerateBtn">
+              Generate Weekly Digest
+            </button>
+          </div>`;
+        }
+        return `<div class="panel col-${p.span}${extraClass} fade-in" id="${panelId}" data-section="${esc(p.section)}"${extraStyle}>
+        <div class="panel-header">
+          <span class="panel-title"
+            ><svg class="panel-icon" width="16" height="16" aria-hidden="true" focusable="false"><use href="#ic-${esc(p.icon)}"/></svg> ${esc(p.title)}</span
+          >
+          ${headerRight}
+        </div>
+        <div class="${bodyClass}" id="${bodyId}">${bodyContent}</div>
+      </div>`;
+      })
+      .join("");
+  }
 }
 
 // ── Main Render ──
 function render(d) {
-  if (!d?.sweep) return;
+  if (!d?.sweep || !DOMAIN) return;
   const sweep = d.sweep;
   const sources = sweep.sources || [];
+  const RC = window.RenderCore;
+  const byCategory = RC.aggregateByCategory(sources);
 
   document.getElementById("statusDot").className = "status-dot live";
   document.getElementById("statusText").textContent = "LIVE";
@@ -614,26 +711,16 @@ function render(d) {
   if (footerSrc) footerSrc.textContent = `${sweep.sourcesTotal} sources`;
 
   renderTicker(sources);
-  renderStats(sources);
-  renderNews(sources);
-  renderModels(sources);
-  renderPapers(sources);
-  renderGitHub(sources);
-  renderReddit(sources);
-  renderHN(sources);
-  renderProductHunt(sources);
-  renderBlog(sources);
+  renderStats(sources, byCategory);
+  for (const panel of DOMAIN.panels) renderPanel(panel, sources, byCategory);
   renderAnalysis(d.analysis);
   renderIntegrity(sources);
   applyNavFilter();
 }
 
-// Fetch digest on load
-fetchDigest().catch(() => {}); // NOSONAR — browser script, not an ES module
-
 // ── Periodic refresh of time-dependent UI ──
 setInterval(() => {
-  if (!data?.sweep) return;
+  if (!data?.sweep || !DOMAIN) return;
   document.getElementById("sweepTime").textContent = timeAgo(
     data.sweep.timestamp,
   );
@@ -641,82 +728,19 @@ setInterval(() => {
 }, 30000);
 
 // ── Stats Bar ──
-function countSourceItems(s, acc) {
-  const items = s.data?.items || [];
-  const models = s.data?.models?.items || [];
-  const name = s.source;
-
-  if (name === "Hugging Face") {
-    acc.totalModels = models.length;
-    for (const m of models) {
-      const p = m.pipeline || "other";
-      acc.pipelines[p] = (acc.pipelines[p] || 0) + 1;
-    }
-  } else if (name === "ArXiv") {
-    acc.totalPapers = items.length;
-    const cats = items.flatMap((p) => (p.categories || []).slice(0, 2));
-    for (const c of cats) {
-      acc.categories[c] = (acc.categories[c] || 0) + 1;
-    }
-  } else if (name === "GitHub Trending") {
-    acc.totalRepos = items.length;
-    for (const r of items) acc.totalStars += r.stars || 0;
-  } else {
-    acc.totalArticles += items.length;
-    acc.sourceCounts[name] = items.length;
-  }
-
-  for (const item of [...items, ...models]) {
-    const t = new Date(
-      item.published || item.created || item.time || item.lastModified || 0,
-    ).getTime();
-    if (t > acc.newestTime) acc.newestTime = t;
-  }
-}
-
-function aggregateSources(sources) {
-  const acc = {
-    totalArticles: 0,
-    totalModels: 0,
-    totalPapers: 0,
-    totalRepos: 0,
-    totalStars: 0,
-    sourceCounts: {},
-    pipelines: {},
-    categories: {},
-    newestTime: 0,
-  };
-
-  for (const s of sources) {
-    if (s.status !== "ok") continue;
-    countSourceItems(s, acc);
-  }
-
-  return acc;
-}
-
 function renderSourceChart(sourceCounts) {
-  const colors = {
-    TechCrunch: "#34d399",
-    "The Verge": "#f472b6",
-    VentureBeat: "#60a5fa",
-    "Google News": "#fbbf24",
-    Reddit: "#f87171",
-    "Hacker News": "#fb923c",
-    "Product Hunt": "#fb923c",
-  };
   const maxCount = Math.max(...Object.values(sourceCounts), 1);
   return Object.entries(sourceCounts)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 6)
     .map(([name, count]) => {
       const h = Math.max(4, Math.round((count / maxCount) * 32));
-      const c = colors[name] || "#888";
+      const c = sourceColor(name);
       const abbrev = name
         .split(" ")
         .map((w) => w[0])
         .join("");
-      return `<div class="mini-bar" style="height:${h}px;background:${c}" title="${name}: ${count}"><span class="mini-bar-label">${abbrev}</span></div>`;
+      return `<div class="mini-bar" style="height:${h}px;background:${c}" title="${esc(name)}: ${count}"><span class="mini-bar-label">${abbrev}</span></div>`;
     })
     .join("");
 }
@@ -744,35 +768,44 @@ function renderFreshness(newestTime) {
   document.getElementById("freshnessSub").textContent = freshnessLabel;
 }
 
-function renderStats(sources) {
+function renderStats(sources, byCategory) {
+  if (!DOMAIN) return;
+  const RC = window.RenderCore;
+  byCategory = byCategory ?? RC.aggregateByCategory(sources);
   document.getElementById("statsBar").style.display = "flex";
 
-  const agg = aggregateSources(sources);
+  for (const stat of DOMAIN.stats) {
+    const { value, sub } = RC.statValue(stat, byCategory);
+    const numEl = document.getElementById(`stat-${stat.key}`);
+    if (numEl) numEl.textContent = value;
+    if (stat.sub) {
+      const subEl = document.getElementById(`stat-${stat.key}-sub`);
+      if (subEl) subEl.textContent = sub;
+    }
+    if (stat.chart) {
+      // Per-source item counts across this stat's categories
+      const sourceCounts = {};
+      for (const s of sources) {
+        if (s.status !== "ok") continue;
+        const cat = s.data?.category ?? "news";
+        if (!stat.categories.includes(cat)) continue;
+        const n = (s.data?.items || []).length;
+        if (n > 0) sourceCounts[s.source] = n;
+      }
+      const chartEl = document.getElementById("chartSources");
+      if (chartEl) chartEl.innerHTML = renderSourceChart(sourceCounts);
+    }
+  }
 
-  document.getElementById("statArticles").textContent = agg.totalArticles;
-  document.getElementById("statModels").textContent = agg.totalModels;
-  document.getElementById("statPapers").textContent = agg.totalPapers;
-  document.getElementById("statRepos").textContent = agg.totalRepos;
-
-  const topPipeline = Object.entries(agg.pipelines).sort(
-    (a, b) => b[1] - a[1],
-  )[0];
-  document.getElementById("statTopPipeline").textContent = topPipeline
-    ? `Top: ${topPipeline[0]}`
-    : "—";
-
-  const topCat = Object.entries(agg.categories).sort((a, b) => b[1] - a[1])[0];
-  document.getElementById("statTopCat").textContent = topCat
-    ? `Top: ${topCat[0]}`
-    : "—";
-
-  document.getElementById("statTotalStars").textContent =
-    `★ ${formatNum(agg.totalStars)} total`;
-
-  document.getElementById("chartSources").innerHTML = renderSourceChart(
-    agg.sourceCounts,
-  );
-  renderFreshness(agg.newestTime);
+  // Freshness (built-in engine chrome): newest item timestamp across everything
+  let newestTime = 0;
+  for (const items of Object.values(byCategory)) {
+    for (const item of items) {
+      const t = new Date(item._time || 0).getTime();
+      if (t > newestTime) newestTime = t;
+    }
+  }
+  renderFreshness(newestTime);
 }
 
 // ── Ticker ──
@@ -802,132 +835,33 @@ function renderTicker(sources) {
   document.getElementById("ticker").innerHTML = html + html;
 }
 
-// ── AI News (Trending + Newest) ──
-function renderNews(sources) {
-  const excludeSources = new Set(["GitHub Trending"]);
-  const allItems = [];
-  for (const s of sources) {
-    if (s.status !== "ok" || excludeSources.has(s.source)) continue;
-    const items = s.data?.items || [];
-    for (const item of items.slice(0, 10)) {
-      allItems.push({
-        ...item,
-        _source: s.source,
-        _score: item.score || item.stars || item.likes || 0,
-        _comments: item.comments || item.descendants || 0,
-      });
-    }
-  }
-
-  // Trending: sort by engagement
-  const trending = [...allItems]
-    .filter((i) => i._score > 0 || i._comments > 0)
-    .sort((a, b) => b._score + b._comments - (a._score + a._comments))
-    .slice(0, 20);
-  document.getElementById("trendingCount").textContent = trending.length;
-  document.getElementById("trendingBody").innerHTML = trending
-    .map((i) => {
-      const articleUrl = i.permalink || i.url || "";
-      const mainHref = i.hnLink || articleUrl;
-      return `
+// ── Panels (variant-dispatched, field-driven) ──
+function newsItemHtml(i) {
+  const c = sourceColor(i._source);
+  const chipLabel = i.subreddit ? `r/${i.subreddit}` : i._source;
+  const chipStyle = i.subreddit
+    ? `background:${c}1f;color:${c}`
+    : `background:${c}22;color:${c}`;
+  const author = i.author || i.creator;
+  const time = timeAgo(i._time);
+  return `
     <div class="news-item">
-      <div class="news-title"><a href="${esc(mainHref)}" target="_blank" rel="noopener">${esc(i.title || i.name)}</a></div>
+      <div class="news-title"><a href="${esc(i._url)}" target="_blank" rel="noopener">${esc(i.title || i.name)}</a></div>
       <div class="news-meta">
-        <span class="news-source" style="background:${sourceColor(i._source)}22;color:${sourceColor(i._source)}">${esc(i._source)}</span>
+        <span class="news-source" style="${chipStyle}">${esc(chipLabel)}</span>
         ${i._score ? `<span class="news-score">▲ ${formatNum(i._score)}</span>` : ""}
         ${i._comments ? `<span>💬 ${formatNum(i._comments)}</span>` : ""}
-        <span>${timeAgo(i.published || i.created || i.time)}</span>
+        ${i.flair ? `<span style="color:var(--purple)">${esc(i.flair)}</span>` : ""}
+        ${author ? `<span>${esc(author)}</span>` : ""}
+        ${time ? `<span>${time}</span>` : ""}
       </div>
+      ${i.description ? `<div class="news-meta" style="opacity:0.7">${esc(i.description)}</div>` : ""}
     </div>
   `;
-    })
-    .join("");
-
-  // Newest: sort by date
-  const newest = [...allItems]
-    .filter((i) => i.published || i.created || i.time)
-    .sort(
-      (a, b) =>
-        new Date(b.published || b.created || b.time || 0) -
-        new Date(a.published || a.created || a.time || 0),
-    )
-    .slice(0, 20);
-  document.getElementById("newsCount").textContent = newest.length;
-  document.getElementById("newsBody").innerHTML = newest
-    .map((i) => {
-      const articleUrl = i.permalink || i.url || "";
-      const mainHref = i.hnLink || articleUrl;
-      return `
-    <div class="news-item">
-      <div class="news-title"><a href="${esc(mainHref)}" target="_blank" rel="noopener">${esc(i.title || i.name)}</a></div>
-      <div class="news-meta">
-        <span class="news-source" style="background:${sourceColor(i._source)}22;color:${sourceColor(i._source)}">${esc(i._source)}</span>
-        ${i.creator ? `<span>${esc(i.creator)}</span>` : ""}
-        <span>${timeAgo(i.published || i.created || i.time)}</span>
-      </div>
-    </div>
-  `;
-    })
-    .join("");
 }
 
-// ── Trending Models ──
-function renderModels(sources) {
-  const hf = sources.find(
-    (s) => s.source === "Hugging Face" && s.status === "ok",
-  );
-  const models = hf?.data?.models?.items || [];
-  document.getElementById("modelsCount").textContent = models.length;
-
-  document.getElementById("modelsBody").innerHTML = models
-    .slice(0, 15)
-    .map(
-      (m) => `
-  <div class="model-card">
-    <div class="model-name"><a href="${esc(m.url)}" target="_blank" rel="noopener">${esc(m.id)}</a></div>
-    <div class="model-stats">↓ ${formatNum(m.downloads)} &nbsp; ♥ ${formatNum(m.likes)} &nbsp; ${esc(m.pipeline)}</div>
-    <div class="model-tags">${(m.tags || []).map((t) => `<span class="model-tag">${esc(t)}</span>`).join("")}</div>
-  </div>
-`,
-    )
-    .join("");
-}
-
-// ── ArXiv Papers ──
-function renderPapers(sources) {
-  const arxiv = sources.find((s) => s.source === "ArXiv" && s.status === "ok");
-  const papers = arxiv?.data?.items || [];
-  document.getElementById("papersCount").textContent = papers.length;
-
-  document.getElementById("papersBody").innerHTML = papers
-    .slice(0, 15)
-    .map(
-      (p) => `
-  <div class="paper-card">
-    <div class="paper-title"><a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.title)}</a></div>
-    <div class="paper-authors">${esc((p.authors || []).join(", "))}</div>
-    <div class="paper-cats">${(p.categories || [])
-      .slice(0, 3)
-      .map((c) => `<span class="paper-cat">${esc(c)}</span>`)
-      .join("")}</div>
-  </div>
-`,
-    )
-    .join("");
-}
-
-// ── GitHub Trending ──
-function renderGitHub(sources) {
-  const gh = sources.find(
-    (s) => s.source === "GitHub Trending" && s.status === "ok",
-  );
-  const repos = gh?.data?.items || [];
-  document.getElementById("reposCount").textContent = repos.length;
-
-  document.getElementById("reposBody").innerHTML = repos
-    .slice(0, 12)
-    .map(
-      (r) => `
+function repoCardHtml(r) {
+  return `
   <div class="repo-card">
     <div class="repo-name"><a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.name)}</a></div>
     <div class="repo-desc">${esc(r.description)}</div>
@@ -937,108 +871,55 @@ function renderGitHub(sources) {
       ${r.language ? `<span>${esc(r.language)}</span>` : ""}
     </div>
   </div>
-`,
-    )
-    .join("");
+`;
 }
 
-// ── Reddit ──
-function renderReddit(sources) {
-  const reddit = sources.find(
-    (s) => s.source === "Reddit" && s.status === "ok",
-  );
-  const posts = reddit?.data?.items || [];
-  document.getElementById("redditCount").textContent = posts.length;
-
-  document.getElementById("redditBody").innerHTML = posts
-    .slice(0, 15)
-    .map(
-      (p) => `
-  <div class="news-item">
-    <div class="news-title"><a href="${esc(p.permalink || p.url)}" target="_blank" rel="noopener">${esc(p.title)}</a></div>
-    <div class="news-meta">
-      <span class="news-source" style="background:rgba(248,113,113,0.12);color:#f87171">r/${esc(p.subreddit)}</span>
-      <span class="news-score">▲ ${formatNum(p.score)}</span>
-      <span>💬 ${p.comments}</span>
-      <span>${timeAgo(p.created)}</span>
-      ${p.flair ? `<span style="color:var(--purple)">${esc(p.flair)}</span>` : ""}
-    </div>
+function paperCardHtml(p) {
+  return `
+  <div class="paper-card">
+    <div class="paper-title"><a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.title)}</a></div>
+    <div class="paper-authors">${esc((p.authors || []).join(", "))}</div>
+    <div class="paper-cats">${(p.categories || [])
+      .slice(0, 3)
+      .map((c) => `<span class="paper-cat">${esc(c)}</span>`)
+      .join("")}</div>
   </div>
-`,
-    )
-    .join("");
+`;
 }
 
-// ── Hacker News ──
-function renderHN(sources) {
-  const hn = sources.find(
-    (s) => s.source === "Hacker News" && s.status === "ok",
-  );
-  const stories = hn?.data?.items || [];
-  document.getElementById("hnCount").textContent = stories.length;
-
-  document.getElementById("hnBody").innerHTML = stories
-    .slice(0, 15)
-    .map(
-      (s) => `
-  <div class="news-item">
-    <div class="news-title"><a href="${esc(s.hnLink)}" target="_blank" rel="noopener">${esc(s.title)}</a></div>
-    <div class="news-meta">
-      <span class="news-score">▲ ${s.score}</span>
-      <span>💬 ${s.comments}</span>
-      <span>${esc(s.author)}</span>
-      <span>${timeAgo(s.time)}</span>
-    </div>
+function modelCardHtml(m) {
+  return `
+  <div class="model-card">
+    <div class="model-name"><a href="${esc(m.url)}" target="_blank" rel="noopener">${esc(m.id)}</a></div>
+    <div class="model-stats">↓ ${formatNum(m.downloads)} &nbsp; ♥ ${formatNum(m.likes)} &nbsp; ${esc(m.pipeline)}</div>
+    <div class="model-tags">${(m.tags || []).map((t) => `<span class="model-tag">${esc(t)}</span>`).join("")}</div>
   </div>
-`,
-    )
-    .join("");
+`;
 }
 
-// ── Product Hunt ──
-function renderProductHunt(sources) {
-  const ph = sources.find(
-    (s) => s.source === "Product Hunt" && s.status === "ok",
-  );
-  const items = ph?.data?.items || [];
-  document.getElementById("phCount").textContent = items.length;
-
-  document.getElementById("phBody").innerHTML = items
-    .slice(0, 10)
-    .map(
-      (i) => `
-  <div class="news-item">
-    <div class="news-title"><a href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.title)}</a></div>
-    <div class="news-meta">${esc(i.description)}</div>
-    <div class="news-meta"><span>${timeAgo(i.published)}</span></div>
-  </div>
-`,
-    )
-    .join("");
+function cardHtmlFor(item) {
+  if (item.stars != null) return repoCardHtml(item);
+  if (item.authors) return paperCardHtml(item);
+  if (item.downloads != null || item.pipeline) return modelCardHtml(item);
+  return newsItemHtml(item);
 }
 
-// ── Simon Willison ──
-function renderBlog(sources) {
-  const blog = sources.find(
-    (s) => s.source === "Simon Willison" && s.status === "ok",
-  );
-  const items = blog?.data?.items || [];
-  document.getElementById("blogCount").textContent = items.length;
+function renderPanel(panel, sources, byCategory) {
+  if (panel.variant === "briefing" || panel.variant === "radar") return; // LLM-driven
+  if (panel.variant === "digest") return; // digest flow owns its body
 
-  document.getElementById("blogBody").innerHTML = items
-    .slice(0, 15)
-    .map(
-      (i) => `
-  <div class="news-item">
-    <div class="news-title"><a href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.title)}</a></div>
-    <div class="news-meta">
-      ${i.author ? `<span>${esc(i.author)}</span>` : ""}
-      <span>${timeAgo(i.published)}</span>
-    </div>
-    ${i.description ? `<div class="news-meta" style="opacity:0.7">${esc(i.description)}</div>` : ""}
-  </div>
-`,
-    )
+  const RC = window.RenderCore;
+  const items =
+    panel.variant === "aggregate"
+      ? RC.aggregateItems(panel, byCategory)
+      : RC.selectPanelItems(panel, sources, byCategory);
+
+  const countEl = document.getElementById(`count-${panel.id}`);
+  if (countEl) countEl.textContent = items.length;
+  const bodyEl = document.getElementById(`body-${panel.id}`);
+  if (!bodyEl) return;
+  bodyEl.innerHTML = items
+    .map((i) => (panel.variant === "cards" ? cardHtmlFor(i) : newsItemHtml(i)))
     .join("");
 }
 
@@ -1150,6 +1031,7 @@ function buildRadarHtml(analysis) {
 function renderAnalysis(analysis) {
   const briefPanel = document.getElementById("analysisPanel");
   const radarPanel = document.getElementById("radarPanel");
+  if (!briefPanel || !radarPanel) return;
   if (!analysis) {
     briefPanel.style.display = "none";
     radarPanel.style.display = "none";
@@ -1235,7 +1117,7 @@ function renderDigest(digest) {
   const panel = document.getElementById("digestPanel");
   const body = document.getElementById("digestBody");
   const meta = document.getElementById("digestMeta");
-  if (!digest) return;
+  if (!digest || !panel || !body || !meta) return;
 
   // Only show the digest panel if the digest filter is active
   const filter = activeFilter();
@@ -1331,35 +1213,66 @@ async function triggerDigestGeneration(btn) {
   }
 }
 
-// Wire up the initial generate button
-document
-  .getElementById("digestGenerateBtn")
-  ?.addEventListener("click", function () {
-    triggerDigestGeneration(this);
-  });
-
 // ── Source Integrity (modal) ──
 let cachedSources = [];
 function renderIntegrity(sources) {
   cachedSources = sources;
 }
 
-document.getElementById("sourceCount").addEventListener("click", () => {
-  const modal = document.getElementById("sourceModal");
-  if (cachedSources.length) {
-    document.getElementById("sourceModalBody").innerHTML =
-      `<div class="source-grid">${cachedSources
-        .map(
-          (s) =>
-            `<div class="source-chip"><span class="dot ${s.status === "ok" ? "ok" : "err"}"></span>${esc(s.source)}</div>`,
-        )
-        .join("")}</div>`;
+function initSourceModal() {
+  document.getElementById("sourceCount").addEventListener("click", () => {
+    const modal = document.getElementById("sourceModal");
+    if (cachedSources.length) {
+      document.getElementById("sourceModalBody").innerHTML =
+        `<div class="source-grid">${cachedSources
+          .map(
+            (s) =>
+              `<div class="source-chip"><span class="dot ${s.status === "ok" ? "ok" : "err"}"></span>${esc(s.source)}</div>`,
+          )
+          .join("")}</div>`;
+    }
+    modal.classList.add("open");
+  });
+  document.getElementById("sourceModalClose").addEventListener("click", () => {
+    document.getElementById("sourceModal").classList.remove("open");
+  });
+  document.getElementById("sourceModal").addEventListener("click", (e) => {
+    if (e.target === e.currentTarget) e.currentTarget.classList.remove("open");
+  });
+}
+
+// ── Boot: domain chrome first, then all init ──
+// Panels/nav/stats are built from /api/domain BEFORE the collapse/nav/etc.
+// initializers run (they key off runtime-built elements). If the domain fetch
+// fails (e.g. the static inject.mjs export has no server), the dashboard
+// renders no panels but must not throw.
+async function init() {
+  try {
+    const res = await fetch("/api/domain");
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    DOMAIN = await res.json();
+    buildDomainUI(DOMAIN);
+  } catch (err) {
+    console.error("Failed to load /api/domain — dashboard disabled", err);
   }
-  modal.classList.add("open");
-});
-document.getElementById("sourceModalClose").addEventListener("click", () => {
-  document.getElementById("sourceModal").classList.remove("open");
-});
-document.getElementById("sourceModal").addEventListener("click", (e) => {
-  if (e.target === e.currentTarget) e.currentTarget.classList.remove("open");
-});
+
+  initTheme();
+  initKeyboardHelp();
+  initNav();
+  initPanelCollapse();
+  initHamburger();
+  initSearch();
+  initSourceModal();
+
+  // Wire up the initial digest generate button (runtime-built panel)
+  document
+    .getElementById("digestGenerateBtn")
+    ?.addEventListener("click", function () {
+      triggerDigestGeneration(this);
+    });
+
+  // Fetch digest on load
+  fetchDigest().catch(() => {}); // NOSONAR — browser script, not an ES module
+}
+
+init();
