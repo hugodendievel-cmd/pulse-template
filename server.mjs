@@ -107,10 +107,16 @@ app.use(
 );
 
 // ── Rate limiting ──
+// Scope: /api/* JSON routes only. Static assets and the page shell are cheap,
+// and /events is a long-lived SSE connection — counting it (plus the browser's
+// auto-reconnect after every server restart) against a 60/min global cap
+// locked real users out. Behind a reverse proxy all clients share one IP, so
+// the per-IP bucket must be sized for the dashboard's own polling pattern.
 app.use(
+  "/api",
   rateLimit({
     windowMs: 60_000,
-    max: 60,
+    max: 300,
     standardHeaders: true,
     legacyHeaders: false,
     message: { error: "Too many requests, please try again later." },
