@@ -53,6 +53,13 @@ function pulseNameHtml(name) {
   return rest ? `${first}<span>${rest}</span>` : first;
 }
 
+// Pack branding credit ("by dendievel.me") rendered as the header link.
+// Absent credit → empty string so the header renders nothing.
+function creditHtml(credit) {
+  if (!credit?.text || !credit?.url) return "";
+  return `<a class="logo-credit" href="${escapeHtml(credit.url)}" target="_blank" rel="noopener">${escapeHtml(credit.text)}</a>`;
+}
+
 const PORT = Number.parseInt(process.env.PORT || "3200", 10);
 const REFRESH_MS =
   Number.parseInt(process.env.REFRESH_INTERVAL_MINUTES || "15", 10) * 60_000;
@@ -136,7 +143,8 @@ app.get("/", (_req, res) => {
     html = html
       .replaceAll("__PULSE_NAME_HTML__", pulseNameHtml(domain.name))
       .replaceAll("__PULSE_NAME__", escapeHtml(domain.name))
-      .replaceAll("__PULSE_TAGLINE__", escapeHtml(domain.tagline ?? ""));
+      .replaceAll("__PULSE_TAGLINE__", escapeHtml(domain.tagline ?? ""))
+      .replaceAll("__PULSE_CREDIT__", creditHtml(domain.credit));
   }
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Content-Type", "text/html");
@@ -164,8 +172,8 @@ app.get("/api/data", (_req, res) => {
 app.get("/api/domain", (_req, res) => {
   if (!domain)
     return res.status(503).json({ error: "Domain pack not loaded yet" });
-  const { name, tagline, panels, stats, nav, colors } = domain;
-  res.json({ name, tagline, panels, stats, nav, colors });
+  const { name, tagline, credit, panels, stats, nav, colors } = domain;
+  res.json({ name, tagline, credit, panels, stats, nav, colors });
 });
 
 app.get("/api/health", (_req, res) => {

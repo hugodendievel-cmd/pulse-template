@@ -9,6 +9,9 @@ export default {
   name: "Pulse",
   tagline: "intelligence dashboard template — swap this pack for your own domain.",
 
+  // Header credit link (pack-owned branding): { text, url } or omit entirely.
+  credit: { text: "by dendievel.me", url: "https://dendievel.me" },
+
   sources: [
     { name: "GitHub Trending", module: "github-trending",
       config: { query: "topic:javascript OR topic:typescript", dateField: "created" } },

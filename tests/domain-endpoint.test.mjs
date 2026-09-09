@@ -48,7 +48,15 @@ describe("GET /api/domain", () => {
       .split(",")
       .map((k) => k.trim())
       .filter(Boolean);
-    expect(keys).toEqual(["name", "tagline", "panels", "stats", "nav", "colors"]);
+    expect(keys).toEqual([
+      "name",
+      "tagline",
+      "credit",
+      "panels",
+      "stats",
+      "nav",
+      "colors",
+    ]);
     expect(m[1]).not.toMatch(/sources|prompts|freshSources/);
   });
 });

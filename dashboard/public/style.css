@@ -690,6 +690,28 @@ html.light .stat-icon {
   font-weight: inherit;
 }
 
+/* Pack-owned credit link ("by dendievel.me") — quiet mono, green on hover */
+.logo-credit {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 400;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+  margin-left: 10px;
+  white-space: nowrap;
+  transition: color 0.15s;
+}
+
+.logo-credit:hover {
+  color: var(--accent);
+}
+
+@media (max-width: 720px) {
+  .logo-credit {
+    display: none;
+  }
+}
+
 .hamburger {
   display: none;
   background: none;
