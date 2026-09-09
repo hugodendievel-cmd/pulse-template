@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import { SOURCE_NAMES } from "../apis/briefing.mjs";
+import example from "../domains/example.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = resolve(__dirname, "..");
@@ -13,7 +14,8 @@ const root = resolve(__dirname, "..");
  *
  * diag.mjs is a top-level-await script that boots modules with side effects,
  * so we can't safely `import` it from a test. Parsing the literal is robust
- * enough for this guardrail: we just need the mapping keys + values.
+ * enough for this guardrail. Slugs resolve pack-first (diag builds `slugOf`
+ * from the active pack's `module` fields); NAME_TO_SLUG is legacy fallback.
  */
 function loadNameToSlug() {
   const src = readFileSync(resolve(root, "diag.mjs"), "utf-8");
@@ -31,14 +33,29 @@ function loadNameToSlug() {
   return entries;
 }
 
-describe("diag.mjs NAME_TO_SLUG coverage", () => {
-  it("has a slug mapping for every SOURCE_NAME", () => {
-    const mapping = loadNameToSlug();
-    const missing = SOURCE_NAMES.filter((name) => !(name in mapping));
-    expect(missing).toEqual([]);
+describe("diag.mjs source-slug resolution", () => {
+  it("is pack-aware (builds slugOf from loadDomain().sources)", () => {
+    const src = readFileSync(resolve(root, "diag.mjs"), "utf-8");
+    expect(src).toContain("loadDomain()");
+    expect(src).toContain("slugOf.get(name)");
   });
 
-  it("every mapped slug resolves to a real module under apis/sources/", () => {
+  it("every active SOURCE_NAME resolves via the pack's module fields", () => {
+    const packModules = new Map(example.sources.map((s) => [s.name, s.module]));
+    const missing = SOURCE_NAMES.filter(
+      (name) => !packModules.has(name),
+    );
+    expect(missing).toEqual([]);
+    for (const [name, slug] of packModules) {
+      if (!SOURCE_NAMES.includes(name)) continue;
+      expect(
+        existsSync(resolve(root, "apis/sources", `${slug}.mjs`)),
+        `apis/sources/${slug}.mjs`,
+      ).toBe(true);
+    }
+  });
+
+  it("legacy NAME_TO_SLUG fallback only maps modules that exist", () => {
     const mapping = loadNameToSlug();
     const broken = Object.entries(mapping).filter(
       ([, slug]) => !existsSync(resolve(root, "apis/sources", `${slug}.mjs`)),

@@ -30,11 +30,15 @@ describe("lib/llm/* routes errors through pino (not console)", () => {
       model: "test-model",
     };
 
-    const result = await analyzeWithLLM(mockLlm, {
-      sources: [],
-      sourcesOk: 0,
-      timestamp: "2026-04-18T00:00:00.000Z",
-    });
+    const result = await analyzeWithLLM(
+      mockLlm,
+      {
+        sources: [],
+        sourcesOk: 0,
+        timestamp: "2026-04-18T00:00:00.000Z",
+      },
+      { prompt: "Test prompt" },
+    );
 
     expect(result).toBeNull();
     expect(consoleErrorSpy).not.toHaveBeenCalled();
@@ -50,11 +54,15 @@ describe("lib/llm/* routes errors through pino (not console)", () => {
       model: "test-model",
     };
 
-    const result = await generateWeeklyDigest(mockLlm, {
-      sources: [],
-      sourcesOk: 0,
-      timestamp: "2026-04-18T00:00:00.000Z",
-    });
+    const result = await generateWeeklyDigest(
+      mockLlm,
+      {
+        sources: [],
+        sourcesOk: 0,
+        timestamp: "2026-04-18T00:00:00.000Z",
+      },
+      { prompt: "Test prompt", freshSources: ["Hacker News"] },
+    );
 
     expect(result).toBeNull();
     expect(consoleErrorSpy).not.toHaveBeenCalled();

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// cli.mjs — CLI entrypoint for `npx ai-pulse`
+// cli.mjs — CLI entrypoint for the pulse dashboard
 
 import { copyFileSync, existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
@@ -11,7 +11,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const [major] = process.versions.node.split(".").map(Number);
 if (major < 22) {
   console.error(
-    `\n  ✗ ai-pulse requires Node.js 22+, you have v${process.versions.node}\n`,
+    `\n  ✗ pulse requires Node.js 22+, you have v${process.versions.node}\n`,
   );
   process.exit(1);
 }
@@ -23,7 +23,7 @@ if (!existsSync(envDest)) {
   if (existsSync(envSrc)) {
     copyFileSync(envSrc, envDest);
     console.log(
-      "[AI Pulse] Created .env in current directory — edit it to configure LLM and API keys\n",
+      "[pulse] Created .env in current directory — edit it to configure LLM and API keys\n",
     );
   }
 }

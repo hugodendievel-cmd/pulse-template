@@ -23,7 +23,7 @@ describe("generateWeeklyDigest — prose-wrapped JSON response", () => {
       timestamp: "2026-04-18T00:00:00.000Z",
     };
 
-    const result = await generateWeeklyDigest(mockLlm, sweepData);
+    const result = await generateWeeklyDigest(mockLlm, sweepData, { prompt: "Test digest prompt", freshSources: ["Hacker News"] });
 
     expect(result).not.toBeNull();
     expect(result.tldr).toBe(
@@ -49,7 +49,7 @@ describe("generateWeeklyDigest — prose-wrapped JSON response", () => {
       timestamp: "2026-04-18T00:00:00.000Z",
     };
 
-    const result = await generateWeeklyDigest(mockLlm, sweepData);
+    const result = await generateWeeklyDigest(mockLlm, sweepData, { prompt: "Test digest prompt", freshSources: ["Hacker News"] });
 
     expect(result).not.toBeNull();
     expect(result.tldr).toBe("short summary");

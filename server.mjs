@@ -491,7 +491,7 @@ async function boot() {
 
   server = app.listen(PORT, () => {
     console.log(`\n  ┌─────────────────────────────────────────┐`);
-    console.log(`  │       AI PULSE — Intelligence HUD       │`);
+    console.log(`  │       PULSE — Intelligence HUD           │`);
     console.log(`  │                                         │`);
     console.log(`  │   Dashboard:  http://localhost:${PORT}     │`);
     console.log(

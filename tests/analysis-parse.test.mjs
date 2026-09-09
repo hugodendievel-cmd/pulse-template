@@ -31,7 +31,7 @@ describe("analyzeWithLLM — fenced JSON response", () => {
       timestamp: "2026-04-18T00:00:00.000Z",
     };
 
-    const result = await analyzeWithLLM(mockLlm, sweepData);
+    const result = await analyzeWithLLM(mockLlm, sweepData, { prompt: "Test analysis prompt" });
 
     expect(result).not.toBeNull();
     expect(result.summary).toBe("A busy week for open-source models.");
@@ -54,7 +54,7 @@ describe("analyzeWithLLM — fenced JSON response", () => {
       timestamp: "2026-04-18T00:00:00.000Z",
     };
 
-    const result = await analyzeWithLLM(mockLlm, sweepData);
+    const result = await analyzeWithLLM(mockLlm, sweepData, { prompt: "Test analysis prompt" });
 
     expect(result).not.toBeNull();
     expect(result.summary).toBe("short");

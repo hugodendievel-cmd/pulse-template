@@ -1,6 +1,6 @@
-// diag.mjs — Diagnostic script for AI Pulse
+// diag.mjs — Diagnostic script for Pulse (template)
 
-console.log("\n  AI PULSE — Diagnostics\n  ─────────────────────\n");
+console.log("\n  PULSE — Diagnostics\n  ──────────────────\n");
 
 // Node version
 const [major] = process.versions.node.split(".").map(Number);
@@ -21,12 +21,14 @@ for (const [name, fn] of modules) {
 
 // Source imports — driven by SOURCE_NAMES so diag stays in sync with briefing.mjs
 const { SOURCE_NAMES, SOURCE_COUNT } = await import("./apis/briefing.mjs");
+const { loadDomain } = await import("./domains/index.mjs");
 
-// Map human source names to their module filenames under apis/sources/.
+// Slugs come from the active pack's `module` fields; the static map only
+// covers display names that predate the packs (used by older child repos).
+const slugOf = new Map(loadDomain().sources.map((s) => [s.name, s.module]));
 const NAME_TO_SLUG = {
   "Hacker News": "hackernews",
   ArXiv: "arxiv",
-  "Hugging Face": "huggingface",
   "GitHub Trending": "github-trending",
   TechCrunch: "techcrunch",
   "The Verge": "theverge",
@@ -40,7 +42,7 @@ const NAME_TO_SLUG = {
 
 console.log(`\n  Sources (${SOURCE_COUNT} total):`);
 for (const name of SOURCE_NAMES) {
-  const slug = NAME_TO_SLUG[name];
+  const slug = slugOf.get(name) || NAME_TO_SLUG[name];
   try {
     if (!slug) throw new Error("no slug mapping");
     await import(`./apis/sources/${slug}.mjs`);

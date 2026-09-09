@@ -3,10 +3,9 @@
 // SOURCE_COUNT / SOURCE_NAMES as plain constants at import time.
 // Adding a pack = one new file in domains/ + one registry line.
 import { env } from "../apis/utils/env.mjs";
-import ai from "./ai.mjs";
-import macApps from "./mac-apps.mjs";
+import example from "./example.mjs";
 
-const REGISTRY = { ai, "mac-apps": macApps };
+const REGISTRY = { example };
 
 const cache = new Map();
 
@@ -32,7 +31,7 @@ export function validateDomain(pack) {
  * Return the pack for `id` (default: PULSE_DOMAIN env, fallback "ai").
  * Validated once, then cached by id — the same object is returned thereafter.
  */
-export function loadDomain(id = env("PULSE_DOMAIN", "ai")) {
+export function loadDomain(id = env("PULSE_DOMAIN", "example")) {
   if (cache.has(id)) return cache.get(id);
   const pack = REGISTRY[id];
   if (!pack) throw new Error(`Unknown domain pack: ${id}`);
