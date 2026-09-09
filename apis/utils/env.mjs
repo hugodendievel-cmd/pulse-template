@@ -10,6 +10,24 @@ const pkgRoot = resolve(__dirname, "..", "..");
 const cwdEnv = resolve(process.cwd(), ".env");
 const pkgEnv = resolve(pkgRoot, ".env");
 const envPath = existsSync(cwdEnv) ? cwdEnv : pkgEnv;
+
+/** Strip an unquoted inline comment: `PORT=3200   # comment` → `3200`.
+ *  A `#` inside quotes is part of the value and is preserved. */
+function stripInlineComment(raw) {
+  let quote = null;
+  for (let i = 0; i < raw.length; i++) {
+    const ch = raw[i];
+    if (quote) {
+      if (ch === quote) quote = null;
+    } else if (ch === '"' || ch === "'") {
+      quote = ch;
+    } else if (ch === "#") {
+      return raw.slice(0, i).trimEnd();
+    }
+  }
+  return raw;
+}
+
 try {
   const content = readFileSync(envPath, "utf-8");
   for (const line of content.split("\n")) {
@@ -18,9 +36,7 @@ try {
     const eqIdx = trimmed.indexOf("=");
     if (eqIdx === -1) continue;
     const key = trimmed.slice(0, eqIdx).trim();
-    const val = trimmed
-      .slice(eqIdx + 1)
-      .trim()
+    const val = stripInlineComment(trimmed.slice(eqIdx + 1).trim())
       .replace(/^["']|["']$/g, "");
     if (!process.env[key]) process.env[key] = val;
   }
