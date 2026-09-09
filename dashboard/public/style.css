@@ -636,8 +636,10 @@ html.light .stat-icon {
 
 .logo {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  line-height: 1;
 }
 
 /* Site has no logo icon — the wordmark + caret is the brand */
@@ -690,14 +692,15 @@ html.light .stat-icon {
   font-weight: inherit;
 }
 
-/* Pack-owned credit link ("by dendievel.me") — quiet mono, green on hover */
+/* Pack-owned credit link ("by dendievel.me") — tucked under the wordmark,
+   aligned to its right edge like a small author's mark */
 .logo-credit {
   font-family: var(--mono);
-  font-size: 0.68rem;
+  font-size: 0.6rem;
   font-weight: 400;
   color: var(--muted);
-  letter-spacing: 0.02em;
-  margin-left: 10px;
+  letter-spacing: 0.04em;
+  align-self: flex-end;
   white-space: nowrap;
   transition: color 0.15s;
 }
