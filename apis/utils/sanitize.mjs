@@ -9,6 +9,7 @@ export function sanitizeText(str) {
   if (typeof str !== "string") return "";
   return str
     .replace(/<[^>]*>/g, "") // strip HTML tags
+    .replace(/&nbsp;/gi, " ") // Google News loves these
     .replace(/&amp;/gi, "&")
     .replace(/&lt;/gi, "<")
     .replace(/&gt;/gi, ">")

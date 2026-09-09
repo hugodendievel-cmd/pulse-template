@@ -692,8 +692,8 @@ html.light .stat-icon {
   font-weight: inherit;
 }
 
-/* Pack-owned credit link ("by dendievel.me") — tucked under the wordmark,
-   aligned to its right edge like a small author's mark */
+/* Pack-owned credit link ("by dendievel.me") — tucked under the wordmark
+   and deliberately pushed past its right edge (author's-mark offset) */
 .logo-credit {
   font-family: var(--mono);
   font-size: 0.6rem;
@@ -701,6 +701,7 @@ html.light .stat-icon {
   color: var(--muted);
   letter-spacing: 0.04em;
   align-self: flex-end;
+  transform: translateX(1.4rem);
   white-space: nowrap;
   transition: color 0.15s;
 }

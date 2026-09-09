@@ -826,7 +826,7 @@ function newsItemHtml(i) {
       <div class="news-meta">
         <span class="news-source">${esc(chipLabel)}</span>
         ${i._score ? `<span class="news-score">▲ ${formatNum(i._score)}</span>` : ""}
-        ${i._comments ? `<span>💬 ${formatNum(i._comments)}</span>` : ""}
+        ${i._comments ? `<span>↳ ${formatNum(i._comments)}</span>` : ""}
         ${i.flair ? `<span class="news-flair">${esc(i.flair)}</span>` : ""}
         ${author ? `<span>${esc(author)}</span>` : ""}
         ${time ? `<span>${time}</span>` : ""}
