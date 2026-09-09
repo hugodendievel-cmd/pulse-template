@@ -1,6 +1,6 @@
 {
     "name": "pulse-template",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "Template for self-hosted intelligence dashboards — multi-source aggregation, LLM briefing, live dashboard. Fork it, write a domain pack, ship your own pulse.",
     "type": "module",
     "bin": {

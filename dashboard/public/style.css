@@ -1147,14 +1147,21 @@ html:not(.light) .icon-moon {
   opacity: 0.75;
 }
 
-.mini-bar-label {
-  position: absolute;
-  bottom: -14px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 0.45rem;
-  color: var(--dim);
-  white-space: nowrap;
+/* LLM-off quiet placeholder inside briefing/radar panels */
+.panel-hint {
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  color: var(--muted);
+  line-height: 1.7;
+  padding: 14px 2px;
+}
+
+.panel-hint code {
+  font-family: var(--mono);
+  color: var(--accent);
+  background: var(--green-faint);
+  padding: 1px 5px;
+  border-radius: 4px;
 }
 
 /* ── Freshness Ring — thin, single accent (site-quiet) ── */
@@ -1229,6 +1236,7 @@ html:not(.light) .icon-moon {
 }
 .panel:hover {
   border-color: rgba(32, 228, 103, 0.45);
+  box-shadow: var(--glow);
 }
 
 .panel:hover {
@@ -2612,6 +2620,13 @@ html.light .theme-toggle .icon-moon {
    Pause on hover of the whole ticker, not just inner. */
 .ticker:hover .ticker-inner {
   animation-play-state: paused;
+}
+
+/* Big screens: let panel bodies breathe — taller than the 460px default */
+@media (min-width: 1600px) {
+  .panel-body {
+    max-height: 640px;
+  }
 }
 
 /* ── Terminal theme (amber on black, Bloomberg-style) ── */

@@ -83,12 +83,26 @@ export function aggregateItems(panel, byCategory) {
   }
   let sorted;
   if (panel.sort === "engagement") {
-    sorted = items
-      .filter((i) => (i._score ?? 0) > 0 || (i._comments ?? 0) > 0)
-      .sort(
-        (a, b) =>
-          (b._score ?? 0) + (b._comments ?? 0) - ((a._score ?? 0) + (a._comments ?? 0)),
-      );
+    // Per-source normalized ranking: each item competes against the best
+    // engagement within its own source, so quiet sources don't drown below
+    // one loud feed. Raw engagement ties normalize to 1.0 across sources.
+    const engaged = items.filter(
+      (i) => (i._score ?? 0) > 0 || (i._comments ?? 0) > 0,
+    );
+    const srcMax = new Map();
+    for (const i of engaged) {
+      const e = (i._score ?? 0) + (i._comments ?? 0);
+      srcMax.set(i._source, Math.max(srcMax.get(i._source) ?? 0, e));
+    }
+    sorted = engaged
+      .map((i) => ({
+        item: i,
+        norm:
+          ((i._score ?? 0) + (i._comments ?? 0)) /
+          (srcMax.get(i._source) || 1),
+      }))
+      .sort((a, b) => b.norm - a.norm)
+      .map((x) => x.item);
   } else {
     // "date"
     sorted = items

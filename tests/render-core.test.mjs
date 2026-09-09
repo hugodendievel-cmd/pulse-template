@@ -145,8 +145,39 @@ describe("aggregateItems", () => {
 
   it("engagement without exclusions includes repo stars as engagement", () => {
     const items = aggregateItems({ sort: "engagement" }, byCategory);
-    expect(items[0].name).toBe("o/r"); // 1500 stars beats 120+5 likes, 12+4
+    // Normalized per source: C (16/16), o/r (1500/1500) and m1 (120/120) all
+    // rank at the top with norm 1.0 (stable order), m2 (5/120) sinks last.
+    expect(items.map((i) => i.title ?? i.name ?? i.id)).toEqual(["C", "o/r", "m1", "m2"]);
     expect(items).toHaveLength(4); // repo + community + both models (likes>0)
+  });
+
+  it("engagement normalization lets a quiet source surface its best item", () => {
+    const sources = [
+      {
+        source: "Loud",
+        status: "ok",
+        data: {
+          category: "news",
+          items: [
+            { title: "loud-top", url: "https://l1", score: 500, created: "2026-09-08T12:00:00Z" },
+            { title: "loud-mid", url: "https://l2", score: 300, created: "2026-09-08T12:00:00Z" },
+          ],
+        },
+      },
+      {
+        source: "Quiet",
+        status: "ok",
+        data: {
+          category: "news",
+          items: [
+            { title: "quiet-best", url: "https://q1", score: 8, created: "2026-09-08T12:00:00Z" },
+          ],
+        },
+      },
+    ];
+    const items = aggregateItems({ sort: "engagement" }, aggregateByCategory(sources));
+    // quiet-best (8/8 = 1.0) outranks loud-mid (300/500 = 0.6)
+    expect(items.map((i) => i.title)).toEqual(["loud-top", "quiet-best", "loud-mid"]);
   });
 
   it("date: undated excluded, newest first", () => {

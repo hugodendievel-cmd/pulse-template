@@ -720,11 +720,7 @@ function renderSourceChart(sourceCounts) {
     .slice(0, 6)
     .map(([name, count]) => {
       const h = Math.max(4, Math.round((count / maxCount) * 32));
-      const abbrev = name
-        .split(" ")
-        .map((w) => w[0])
-        .join("");
-      return `<div class="mini-bar" style="height:${h}px" title="${esc(name)}: ${count}"><span class="mini-bar-label">${abbrev}</span></div>`;
+      return `<div class="mini-bar" style="height:${h}px" title="${esc(name)}: ${count}"></div>`;
     })
     .join("");
 }
@@ -1009,8 +1005,22 @@ function renderAnalysis(analysis) {
   const radarPanel = document.getElementById("radarPanel");
   if (!briefPanel || !radarPanel) return;
   if (!analysis) {
-    briefPanel.style.display = "none";
-    radarPanel.style.display = "none";
+    // No LLM layer: keep the grid rhythm intact with a quiet placeholder
+    // instead of collapsing the panels into holes.
+    briefPanel.style.display = "";
+    radarPanel.style.display = "";
+    const briefBody = document.getElementById("analysisBody");
+    const radarBody = document.getElementById("radarBody");
+    if (briefBody)
+      briefBody.innerHTML =
+        '<div class="panel-hint">briefing disabled — no LLM configured. set <code>LLM_PROVIDER</code> and <code>LLM_API_KEY</code> in <code>.env</code> for daily analyst briefings.</div>';
+    if (radarBody)
+      radarBody.innerHTML =
+        '<div class="panel-hint">radar rides along with the briefing — it needs the LLM layer.</div>';
+    const provider = document.getElementById("analysisProvider");
+    if (provider) provider.textContent = "";
+    const radarCount = document.getElementById("radarCount");
+    if (radarCount) radarCount.textContent = "";
     return;
   }
   briefPanel.style.display = "";
