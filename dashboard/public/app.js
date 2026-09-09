@@ -24,19 +24,6 @@ function timeAgo(iso) {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
-// Categories are engine vocabulary, not pack data — stays hardcoded.
-function badgeClass(cat) {
-  const map = {
-    news: "badge-news",
-    research: "badge-research",
-    models: "badge-model",
-    community: "badge-community",
-    code: "badge-code",
-    products: "badge-products",
-  };
-  return map[cat] || "badge-news";
-}
-
 function formatNum(n) {
   return window.RenderCore.formatNum(n);
 }
@@ -631,7 +618,7 @@ function buildDomainUI(domain) {
         <div
           class="freshness-ring"
           id="freshnessRing"
-          style="background: conic-gradient(var(--green) 0%, var(--bg3) 0%)"
+          style="background: conic-gradient(var(--accent) 0%, var(--bg3) 0%)"
         >
           <span id="freshnessVal">—</span>
         </div>
@@ -750,16 +737,14 @@ function renderFreshness(newestTime) {
     0,
     Math.min(100, Math.round(100 * (1 - ageMins / 1440))),
   );
-  let freshColor = "var(--red)";
-  if (ageMins < 60) freshColor = "var(--green)";
-  else if (ageMins < 360) freshColor = "var(--amber)";
 
   let freshnessLabel = "Aging";
   if (ageMins < 60) freshnessLabel = "Very fresh";
   else if (ageMins < 360) freshnessLabel = "Recent";
 
+  // Single quiet accent — the label carries the state, not a traffic light.
   document.getElementById("freshnessRing").style.background =
-    `conic-gradient(${freshColor} ${freshPct}%, var(--bg3) ${freshPct}%)`;
+    `conic-gradient(var(--accent) ${freshPct}%, var(--bg3) ${freshPct}%)`;
   document.getElementById("freshnessVal").textContent =
     ageMins < 60 ? `${ageMins}m` : `${Math.round(ageMins / 60)}h`;
   document.getElementById("freshnessSub").textContent = freshnessLabel;
@@ -811,13 +796,11 @@ function renderTicker(sources) {
   for (const s of sources) {
     if (s.status !== "ok") continue;
     const srcItems = s.data?.items || [];
-    const cat = s.data?.category || "news";
     for (const item of srcItems.slice(0, 5)) {
       if (item.title) {
         items.push({
           title: item.title,
           source: s.source,
-          cat,
           url: item.permalink || item.url || "#",
         });
       }
@@ -826,7 +809,7 @@ function renderTicker(sources) {
   const html = items
     .map(
       (i) =>
-        `<span class="ticker-item"><span class="badge ${badgeClass(i.cat)}">${esc(i.source)}</span> <a href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.title)}</a></span>`,
+        `<span class="ticker-item"><span class="ticker-src">${esc(i.source)}</span><a href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.title)}</a></span>`,
     )
     .join("");
   document.getElementById("ticker").innerHTML = html + html;
