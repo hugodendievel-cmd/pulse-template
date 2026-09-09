@@ -156,7 +156,9 @@ html.light a {
 }
 
 html.light .header {
-  background: rgba(243, 240, 231, 0.92);
+  background: var(--bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border-bottom-color: var(--border2);
 }
 
@@ -649,7 +651,7 @@ html.light .stat-icon {
 
 /* ────────────────── Header ────────────────── */
 .header {
-  background: rgba(8, 9, 13, 0.8);
+  background: rgba(10, 13, 16, 0.85);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-bottom: 1px solid var(--border);
@@ -675,14 +677,10 @@ html.light .stat-icon {
   gap: 8px;
 }
 
-.logo-mark {
-  display: flex;
-  align-items: center;
-  line-height: 0;
-}
-
+/* Site has no logo icon — the wordmark + caret is the brand */
+.logo-mark,
 .logo-mark svg {
-  display: block;
+  display: none;
 }
 
 .logo h1 {
@@ -790,21 +788,22 @@ html.light .stat-icon {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: var(--bg3);
+  background: var(--bg2);
   border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
-  padding: 6px 12px 6px 10px;
+  border-radius: 999px;
+  padding: 6px 14px;
   color: var(--dim);
-  font-family: var(--font);
-  font-size: 0.78rem;
+  font-family: var(--mono);
+  font-size: 0.75rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
   min-width: 200px;
 }
 
 .search-trigger:hover {
   border-color: var(--accent);
   color: var(--muted);
+  transform: translateY(-1px);
 }
 
 .search-trigger svg {
@@ -818,34 +817,33 @@ html.light .stat-icon {
 }
 
 .search-trigger kbd {
-  font-family: var(--font);
+  font-family: var(--mono);
   font-size: 0.65rem;
-  background: var(--bg4);
+  background: var(--bg3);
   padding: 2px 6px;
   border-radius: 4px;
   color: var(--dim);
   border: 1px solid var(--border);
-  letter-spacing: 0.5px;
 }
 
-/* Theme toggle */
+/* Theme toggle — ghost control, no chrome */
 .theme-toggle {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 34px;
   height: 34px;
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xs);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   color: var(--muted);
   transition: all 0.2s;
 }
 
 .theme-toggle:hover {
-  border-color: var(--accent);
-  color: var(--accent2);
+  background: var(--bg3);
+  color: var(--accent);
 }
 
 html.light .icon-sun {
@@ -888,15 +886,13 @@ html:not(.light) .icon-moon {
   flex-shrink: 0;
 }
 
+/* Flat state dots — the caret is this page's only motion */
 .status-dot.live {
-  background: var(--green);
-  box-shadow: 0 0 8px var(--green);
-  animation: pulse 2s infinite;
+  background: var(--accent);
 }
 
 .status-dot.loading {
   background: var(--amber);
-  animation: pulse 1s infinite;
 }
 
 @keyframes pulse {
@@ -1282,7 +1278,7 @@ html:not(.light) .icon-moon {
 
 .collapse-all-btn {
   background: none;
-  border: 1px solid var(--border);
+  border: none;
   border-radius: 6px;
   color: var(--muted);
   cursor: pointer;
@@ -1291,13 +1287,13 @@ html:not(.light) .icon-moon {
   align-items: center;
   transition:
     color 0.2s,
-    border-color 0.2s,
+    background 0.2s,
     transform 0.25s ease;
 }
 
 .collapse-all-btn:hover {
   color: var(--text);
-  border-color: var(--border2);
+  background: var(--bg3);
 }
 
 .collapse-all-btn.all-collapsed svg {
@@ -2456,15 +2452,15 @@ input:focus-visible,
   width: 30px;
   height: 30px;
   padding: 0;
-  background: var(--bg3);
-  border: 1px solid var(--border);
+  background: none;
+  border: none;
   border-radius: var(--radius-sm);
   color: var(--muted);
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
+  transition: background 0.15s, color 0.15s;
 }
 .kbd-help-btn:hover {
-  border-color: var(--accent);
+  background: var(--bg3);
   color: var(--accent);
 }
 
