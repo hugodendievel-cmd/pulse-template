@@ -816,9 +816,14 @@ function newsItemHtml(i) {
   const chipLabel = i.subreddit ? `r/${i.subreddit}` : i._source;
   const author = i.author || i.creator;
   const time = timeAgo(i._time);
+  // Generic RSS feeds emit "title source" as the description — showing it
+  // duplicates the headline. Drop descriptions that restate the title.
+  const title = (i.title || i.name || "").replace(/\s+/g, " ").trim();
+  const desc = (i.description || "").replace(/\s+/g, " ").trim();
+  const showDesc = desc && !desc.toLowerCase().startsWith(title.toLowerCase().slice(0, 24));
   return `
     <div class="news-item">
-      <div class="news-title"><a href="${esc(i._url)}" target="_blank" rel="noopener">${esc(i.title || i.name)}</a></div>
+      <div class="news-title"><a href="${esc(i._url)}" target="_blank" rel="noopener">${esc(title)}</a></div>
       <div class="news-meta">
         <span class="news-source">${esc(chipLabel)}</span>
         ${i._score ? `<span class="news-score">▲ ${formatNum(i._score)}</span>` : ""}
@@ -827,7 +832,7 @@ function newsItemHtml(i) {
         ${author ? `<span>${esc(author)}</span>` : ""}
         ${time ? `<span>${time}</span>` : ""}
       </div>
-      ${i.description ? `<div class="news-meta" style="opacity:0.7">${esc(i.description)}</div>` : ""}
+      ${showDesc ? `<div class="news-meta" style="opacity:0.7">${esc(desc)}</div>` : ""}
     </div>
   `;
 }

@@ -172,11 +172,6 @@ html.light .stat-card {
   border-color: var(--border);
 }
 
-html.light .panel-header {
-  background: var(--bg3);
-  border-bottom-color: var(--border);
-}
-
 html.light .ticker {
   background: transparent;
   border-bottom-color: var(--border);
