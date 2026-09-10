@@ -32,13 +32,14 @@
 }
 
 :root {
-  /* Core palette — dendievel.me terminal island */
-  --bg: #0a0d10;
-  --bg2: #131418;
-  --bg3: #191c22;
-  --bg4: #20242c;
-  --border: rgba(255, 255, 255, 0.08);
-  --border2: rgba(255, 255, 255, 0.14);
+  /* Core palette — dendievel.me terminal island, lifted off pure black
+     (warm low-chroma charcoal, same ~85° hue family as the paper shell) */
+  --bg: #141210;
+  --bg2: #1c1916;
+  --bg3: #241f1b;
+  --bg4: #2e2822;
+  --border: rgba(255, 255, 255, 0.1);
+  --border2: rgba(255, 255, 255, 0.16);
 
   /* Accent spectrum — dendievel.me green */
   --accent: #20e467;
@@ -52,11 +53,11 @@
   --pink: #f472b6;
   --orange: #fb923c;
 
-  /* Text hierarchy — term-fg family */
-  --text: #e8e6df;
-  --text2: #c9c7bf;
-  --muted: #8a8f98;
-  --dim: #5f646d;
+  /* Text hierarchy — term-fg family, lifted for readability */
+  --text: #efede6;
+  --text2: #d6d2c8;
+  --muted: #a39d92;
+  --dim: #7a7268;
 
   /* Typography */
   --font:
@@ -75,14 +76,14 @@
   --green-line: rgba(32, 228, 103, 0.45);
 
   /* Effects */
-  --glass: rgba(255, 255, 255, 0.03);
+  --glass: rgba(255, 255, 255, 0.04);
   --glow: 0 0 20px rgba(32, 228, 103, 0.15);
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
   --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.3), 0 12px 40px rgba(0, 0, 0, 0.4);
 
   /* Digest panel */
-  --text-dim: #8a8f98;
-  --card: #131418;
+  --text-dim: #a39d92;
+  --card: #1c1916;
 }
 
 html {
@@ -111,17 +112,17 @@ a:hover {
 }
 
 /* ────────────────── Light Theme — dendievel.me paper ────────────────── */
-/* Exact palette from dendievel.me/style.css:
-   paper #ebe8df · paper-soft #e2dfd5 · paper-warm #f3f0e7
-   ink #0a0a0a / #2a2a28 / #6a6a64 / #b6b3aa
-   green #20e467 (caret/fills) · green-deep #15a04a (links/accent) */
+/* Re-synced 2026-09-10 with dendievel.me/style.css as shipped:
+   paper #f5f1e9 · paper-soft #e8e4db · paper-warm #fcf8f2 · ink-faint #d1cdc6
+   ink #2a1e1a / #443733 / #675b54 (dim #776c64 derived, one step lighter)
+   shadows rgba(42,30,26,…) · green #20e467 · green-deep #15a04a (accent) */
 html.light {
-  --bg: #ebe8df;
-  --bg2: #f3f0e7;
-  --bg3: #e2dfd5;
-  --bg4: #d8d5cb;
-  --border: rgba(10, 10, 10, 0.08);
-  --border2: #b6b3aa;
+  --bg: #f5f1e9;
+  --bg2: #fcf8f2;
+  --bg3: #e8e4db;
+  --bg4: #d1cdc6;
+  --border: #d1cdc6;
+  --border2: rgba(42, 30, 26, 0.25);
   --accent: #15a04a;
   --accent2: #20e467;
   --cyan: #0891b2;
@@ -132,18 +133,18 @@ html.light {
   --purple: #7c3aed;
   --pink: #db2777;
   --orange: #ea580c;
-  --text: #0a0a0a;
-  --text2: #2a2a28;
-  --muted: #6a6a64;
-  --dim: #b6b3aa;
-  --glass: rgba(235, 232, 223, 0.85);
+  --text: #2a1e1a;
+  --text2: #443733;
+  --muted: #675b54;
+  --dim: #776c64;
+  --glass: rgba(245, 241, 233, 0.85);
   --glow: 0 6px 18px rgba(32, 228, 103, 0.18);
-  --shadow: 0 14px 36px rgba(10, 10, 10, 0.06);
-  --shadow-lg: 0 22px 50px rgba(10, 10, 10, 0.04);
+  --shadow: 0 14px 36px rgba(42, 30, 26, 0.08);
+  --shadow-lg: 0 22px 50px rgba(42, 30, 26, 0.18);
 
   /* Digest panel */
-  --text-dim: #6a6a64;
-  --card: #f3f0e7;
+  --text-dim: #675b54;
+  --card: #fcf8f2;
 }
 
 html.light body {
@@ -369,6 +370,14 @@ html.light .stat-icon {
   background: var(--bg4);
 }
 
+/* dendievel.me card recipe for the loading source list:
+   hairline ink-faint border, tight ink shadow instead of the 36px fog */
+html.light .loading-step {
+  box-shadow:
+    0 1px 2px rgba(42, 30, 26, 0.04),
+    0 6px 16px rgba(42, 30, 26, 0.06);
+}
+
 /* ────────────────── Loading Screen ────────────────── */
 .loading-screen {
   position: fixed;
@@ -490,10 +499,10 @@ html.light .stat-icon {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
-  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  border-radius: var(--radius);
   border: 1px solid var(--border);
-  background: linear-gradient(180deg, var(--bg2), var(--bg3));
+  background: var(--card);
   box-shadow: var(--shadow);
 }
 
@@ -507,7 +516,7 @@ html.light .stat-icon {
   border-radius: 50%;
   border: 1px solid var(--border2);
   color: var(--muted);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--bg3);
   font-family: var(--mono);
   font-size: 0.72rem;
 }
@@ -603,7 +612,7 @@ html.light .stat-icon {
 
 /* ────────────────── Header ────────────────── */
 .header {
-  background: rgba(10, 13, 16, 0.85);
+  background: rgba(20, 18, 16, 0.85);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-bottom: 1px solid var(--border);
