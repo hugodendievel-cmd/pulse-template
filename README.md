@@ -7,7 +7,7 @@ Fork this template → write one domain pack → ship your own pulse (AI news, M
 ## Quick start
 
 ```bash
-git clone git@github.com:hugodendievel-cmd/pulse-template.git my-pulse
+git clone https://github.com/hugodendievel-cmd/pulse-template.git my-pulse
 cd my-pulse && npm install
 npm start
 ```
@@ -17,7 +17,7 @@ Dashboard opens at `http://localhost:3200`. First sweep takes ~5–30 s, then au
 ## Build your dashboard (the 5-minute flow)
 
 1. **Write a pack** — copy `domains/example.mjs` to `domains/yours.mjs` and edit it:
-   - `sources` — pick modules from `apis/sources/` (Hacker News, GitHub Trending, Reddit, generic RSS, Google News, Product Hunt, NewsAPI…). Each takes a small `config` (keywords, query, feedUrl, subreddits…).
+   - `sources` — pick modules from `apis/sources/` (Hacker News, GitHub Trending, Reddit, generic RSS, Google News, Product Hunt, NewsAPI, Hugging Face…). Each takes a small `config` (keywords, query, feedUrl, subreddits…).
    - `prompts` — the analyst voice for the briefing and the weekly digest. **Keep the JSON schemas character-identical** — the dashboard renderers depend on those exact field names.
    - `panels`, `stats`, `nav`, `colors`, `freshSources`, `name`/`tagline` — the dashboard builds itself from these.
 2. **Register it** — one line in `domains/index.mjs` (`REGISTRY`), and/or make it the default: `loadDomain(id = env("PULSE_DOMAIN", "yours"))`.
@@ -81,7 +81,7 @@ Daily budget cap via `MAX_LLM_CALLS_PER_DAY` (persisted, Europe/Brussels day bou
 
 ## Lineage
 
-- **Descendants** (e.g. [ai-pulse](https://github.com/hugodendievel-cmd/ai-pulse), future mac-pulse) fork this template and keep full git history — pull engine fixes with:
+- **Descendants** (e.g. [ai-pulse](https://ai-pulse.be) — self-hosted AI news — and future packs) fork this template and keep full git history — pull engine fixes with:
   ```bash
   git remote add upstream git@github.com:hugodendievel-cmd/pulse-template.git
   git fetch upstream && git merge upstream/main
