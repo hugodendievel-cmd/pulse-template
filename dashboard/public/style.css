@@ -32,14 +32,14 @@
 }
 
 :root {
-  /* Core palette — dark shell matched to openchamber's clean .dark ramp
-     (oklch copied verbatim from @openchamber/web .dark; reads neutral, no brown) */
-  --bg: oklch(16% 0.01 30);
-  --bg2: oklch(19% 0.01 40);
-  --bg3: oklch(24% 0.01 40);
-  --bg4: oklch(29% 0.01 40);
-  --border: oklch(31% 0.01 35);
-  --border2: rgba(255, 255, 255, 0.16);
+  /* Core palette — lighter neutral dark for readability (surface steps
+     from v7labs.com: bg #1c1c1c · card #242424 · chip #292929 · fill #333332) */
+  --bg: #1c1c1c;
+  --bg2: #242424;
+  --bg3: #292929;
+  --bg4: #333332;
+  --border: rgba(255, 255, 255, 0.1);
+  --border2: rgba(255, 255, 255, 0.18);
 
   /* Accent spectrum — dendievel.me green */
   --accent: #20e467;
@@ -53,11 +53,11 @@
   --pink: #f472b6;
   --orange: #fb923c;
 
-  /* Text hierarchy — openchamber .dark foreground family, interpolated tiers */
-  --text: oklch(85% 0.02 90);
-  --text2: oklch(79% 0.02 85);
-  --muted: oklch(72% 0.02 85);
-  --dim: oklch(60% 0.015 85);
+  /* Text hierarchy — v7labs.com dark text ramp: body ~85% white, muted #adadad */
+  --text: #eaeaea;
+  --text2: #cfcfcf;
+  --muted: #adadad;
+  --dim: #8a8a8a;
 
   /* Typography */
   --font:
@@ -82,8 +82,8 @@
   --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.3), 0 12px 40px rgba(0, 0, 0, 0.4);
 
   /* Digest panel */
-  --text-dim: oklch(72% 0.02 85);
-  --card: oklch(19% 0.01 40);
+  --text-dim: #adadad;
+  --card: #242424;
 }
 
 html {
@@ -612,7 +612,7 @@ html.light .loading-step {
 
 /* ────────────────── Header ────────────────── */
 .header {
-  background: oklch(16% 0.01 30 / 85%);
+  background: rgba(28, 28, 28, 0.85);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-bottom: 1px solid var(--border);
