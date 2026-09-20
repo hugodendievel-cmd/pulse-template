@@ -17,31 +17,31 @@ describe("lib/delta/memory.mjs", () => {
     rmSync(tmpDir, { recursive: true, force: true });
   });
 
-  it("importing the module does NOT create .ai-pulse/ in cwd", async () => {
+  it("importing the module does NOT create .pulse/ in cwd", async () => {
     await import("../lib/delta/memory.mjs");
-    expect(existsSync(join(tmpDir, ".ai-pulse"))).toBe(false);
+    expect(existsSync(join(tmpDir, ".pulse"))).toBe(false);
   });
 
   it("getPrevious() before any pushSweep returns undefined and does not create a directory", async () => {
     const { getPrevious } = await import("../lib/delta/memory.mjs");
     const result = getPrevious();
     expect(result).toBeUndefined();
-    expect(existsSync(join(tmpDir, ".ai-pulse"))).toBe(false);
+    expect(existsSync(join(tmpDir, ".pulse"))).toBe(false);
   });
 
   it("getLatest() before any pushSweep returns undefined and does not create a directory", async () => {
     const { getLatest } = await import("../lib/delta/memory.mjs");
     const result = getLatest();
     expect(result).toBeUndefined();
-    expect(existsSync(join(tmpDir, ".ai-pulse"))).toBe(false);
+    expect(existsSync(join(tmpDir, ".pulse"))).toBe(false);
   });
 
   it("first pushSweep creates the directory lazily and writes hot.json", async () => {
     const { pushSweep, getLatest } = await import("../lib/delta/memory.mjs");
     const sweep = { timestamp: "2026-04-18T00:00:00.000Z", sources: [] };
     pushSweep(sweep);
-    expect(existsSync(join(tmpDir, ".ai-pulse", "memory"))).toBe(true);
-    expect(existsSync(join(tmpDir, ".ai-pulse", "memory", "hot.json"))).toBe(
+    expect(existsSync(join(tmpDir, ".pulse", "memory"))).toBe(true);
+    expect(existsSync(join(tmpDir, ".pulse", "memory", "hot.json"))).toBe(
       true,
     );
     expect(getLatest()).toEqual(sweep);
@@ -59,8 +59,8 @@ describe("lib/delta/memory.mjs", () => {
 
   it("exports ensureMemoryDir which creates the memory directory", async () => {
     const { ensureMemoryDir } = await import("../lib/delta/memory.mjs");
-    expect(existsSync(join(tmpDir, ".ai-pulse"))).toBe(false);
+    expect(existsSync(join(tmpDir, ".pulse"))).toBe(false);
     ensureMemoryDir();
-    expect(existsSync(join(tmpDir, ".ai-pulse", "memory"))).toBe(true);
+    expect(existsSync(join(tmpDir, ".pulse", "memory"))).toBe(true);
   });
 });

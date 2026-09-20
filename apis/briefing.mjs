@@ -118,21 +118,26 @@ export async function runSweep(onProgress, { pack = DEFAULT_PACK } = {}) {
 }
 
 /**
- * Digest-specific sweep: fetches from all sources with a 7-day window
- * where supported (Google News, NewsAPI). Other sources return their
- * current hot/trending content which is inherently recent.
+ * Windowed sweep: fetches from all sources with a N-day window where
+ * supported (Google News, NewsAPI). Other sources return their current
+ * hot/trending content which is inherently recent. Default 7 days
+ * (weekly digest); the daily edition passes { days: 1 }.
  */
-export async function runDigestSweep({ pack = DEFAULT_PACK } = {}) {
-  const DIGEST_DAYS = 7;
+const DIGEST_DAYS = 7;
+
+export async function runDigestSweep({ pack = DEFAULT_PACK, days = DIGEST_DAYS } = {}) {
   const start = Date.now();
   const sources = await resolveSources(pack);
-  log.info("Digest sweep started — fetching 7-day content from all sources");
+  log.info(
+    { days },
+    `Digest sweep started — fetching ${days}-day content from all sources`,
+  );
 
   const results = await Promise.allSettled(
     sources.map(async (s) => {
       const t0 = Date.now();
       try {
-        const data = await s.fn({ days: DIGEST_DAYS });
+        const data = await s.fn({ days });
         const sanitizedData = sanitizeSourceData(data);
         const ms = Date.now() - t0;
         log.info({ source: s.name, ms }, "Digest source OK");

@@ -29,7 +29,7 @@ if (!existsSync(envDest)) {
 }
 
 // Export package root so modules can find bundled assets
-process.env.__AI_PULSE_ROOT = __dirname;
+process.env.__PULSE_ROOT = __dirname;
 
 // Start the server
 await import("./server.mjs");

@@ -113,6 +113,52 @@ describe("parseLlmJson", () => {
     expect(result.summary).toBe('has "quoted" text');
   });
 
+  // LLMs intermittently emit JSON they never escaped. Losing the whole
+  // briefing to one stray character is worse than repairing it.
+  it("repairs an unescaped quote inside a string value", () => {
+    const raw = `\`\`\`json
+{
+  "summary": "Google said "Gemini" broke out during testing.",
+  "topStories": []
+}
+\`\`\``;
+    const result = parseLlmJson(raw, { required: ["summary"] });
+    expect(result).not.toBeNull();
+    expect(result.summary).toBe(
+      'Google said "Gemini" broke out during testing.',
+    );
+  });
+
+  it("repairs a literal newline inside a string value", () => {
+    const raw = `{"summary": "line one
+line two", "topStories": []}`;
+    const result = parseLlmJson(raw, { required: ["summary"] });
+    expect(result).not.toBeNull();
+    expect(result.summary).toBe("line one\nline two");
+  });
+
+  it("repairs a literal tab inside a string value", () => {
+    const raw = '{"summary": "a\tb", "topStories": []}';
+    const result = parseLlmJson(raw, { required: ["summary"] });
+    expect(result).not.toBeNull();
+    expect(result.summary).toBe("a\tb");
+  });
+
+  it("does not corrupt already-valid JSON with quotes in arrays and legs", () => {
+    const raw =
+      '{"summary":"ok","topStories":[{"headline":"he said \\"hi\\"","url":"https://x.test/a"}],"trends":["a"],"modelRadar":[],"signals":[]}';
+    const result = parseLlmJson(raw, { required: ["summary"] });
+    expect(result).not.toBeNull();
+    expect(result.topStories[0].headline).toBe('he said "hi"');
+    expect(result.topStories[0].url).toBe("https://x.test/a");
+  });
+
+  it("still returns null for a genuinely truncated response", () => {
+    const raw = '{"summary": "unclosed and never finished';
+    const result = parseLlmJson(raw, { required: ["summary"] });
+    expect(result).toBeNull();
+  });
+
   it("handles escaped backslash followed by brace in strings", () => {
     const raw = '{"summary":"path\\\\","topStories":[]}';
     const result = parseLlmJson(raw, { required: ["summary"] });

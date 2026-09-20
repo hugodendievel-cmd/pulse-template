@@ -10,7 +10,7 @@ function readFile(rel) {
   return readFileSync(resolve(root, rel), "utf-8");
 }
 
-describe("no hardcoded source count of 10", () => {
+describe("no hardcoded source counts", () => {
   it("diag.mjs does not contain a stale hardcoded 10-entry source slug list", () => {
     const src = readFile("diag.mjs");
     // After this story, diag.mjs drives its iteration from SOURCE_NAMES.
@@ -28,5 +28,11 @@ describe("no hardcoded source count of 10", () => {
     const src = readFile("server.mjs");
     expect(src).not.toMatch(/sweepProgress\.total\s*=\s*10/);
     expect(src).not.toMatch(/sourcesTotal\s*=\s*10/);
+  });
+
+  it("lib/newsletter/render.mjs derives the source count (no hardcoded 12 sources)", () => {
+    const src = readFile("lib/newsletter/render.mjs");
+    expect(src).not.toMatch(/from\s+12\s+sources/i);
+    expect(src).not.toMatch(/\b12\s+sources\b/);
   });
 });

@@ -1,6 +1,6 @@
 {
     "name": "pulse-template",
-    "version": "0.1.5",
+    "version": "0.2.0",
     "description": "Template for self-hosted intelligence dashboards — multi-source aggregation, LLM briefing, live dashboard. Fork it, write a domain pack, ship your own pulse.",
     "type": "module",
     "bin": {
@@ -12,6 +12,7 @@
         "diag.mjs",
         "apis/",
         "lib/",
+        "domains/",
         "dashboard/public/",
         ".env.example"
     ],
@@ -25,6 +26,7 @@
         "sweep": "node apis/briefing.mjs",
         "inject": "node dashboard/inject.mjs",
         "brief:save": "node apis/save-briefing.mjs",
+        "edition:save": "node apis/save-daily-edition.mjs",
         "diag": "node diag.mjs",
         "test": "vitest run",
         "test:watch": "vitest",

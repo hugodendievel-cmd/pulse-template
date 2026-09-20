@@ -1,17 +1,16 @@
-// tests/orchestrator-pack.test.mjs — briefing.mjs builds its source list from
-// the active pack; analysis/digest prompts/freshSources are pack-provided.
-// No network: the example pack's source modules are stubbed via vi.doMock.
+// tests/orchestrator-pack.test.mjs — Story 2.3: briefing.mjs builds its source
+// list from the active pack; analysis/digest prompts are overridable.
+// No network: every pack source module is stubbed via vi.doMock + vi.resetModules.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import example from "../domains/example.mjs";
 
-// [displayName, moduleSlug] — example pack order
-const EXAMPLE_SOURCES = [
-  ["GitHub Trending", "github-trending"],
-  ["Hacker News", "hackernews"],
-  ["Tech News", "techcrunch"],
-  ["Google News", "google-news"],
-];
+// [displayName, moduleSlug, config] — current orchestrator order (FR6 guard)
+const EXAMPLE_SOURCES = example.sources.map((s) => [
+  s.name,
+  s.module,
+  s.config,
+]);
 
 function stubAllSources({ titleByName = {} } = {}) {
   const mocks = {};
@@ -41,8 +40,8 @@ afterEach(() => {
   vi.resetModules();
 });
 
-describe("runSweep — pack-driven sources", () => {
-  it("queries the pack sources in order, config flows, opts empty", async () => {
+describe("runSweep — pack-driven sources (FR6 shape)", () => {
+  it("queries the pack's sources in order, config flows, opts empty", async () => {
     const mocks = stubAllSources();
     const { runSweep } = await import("../apis/briefing.mjs");
     const result = await runSweep();
@@ -52,15 +51,15 @@ describe("runSweep — pack-driven sources", () => {
     expect(result.sources.map((s) => s.source)).toEqual(
       EXAMPLE_SOURCES.map(([name]) => name),
     );
+    expect(result).toMatchObject({
+      sourcesOk: EXAMPLE_SOURCES.length,
+      sourcesTotal: EXAMPLE_SOURCES.length,
+    });
     expect(typeof result.timestamp).toBe("string");
     expect(typeof result.sweepDurationMs).toBe("number");
 
-    for (const [index, [name]] of EXAMPLE_SOURCES.entries()) {
-      // The pack's per-source config flows into the module call.
-      expect(mocks[name]).toHaveBeenCalledWith(
-        example.sources[index].config,
-        undefined,
-      );
+    for (const [name, , config] of EXAMPLE_SOURCES) {
+      expect(mocks[name]).toHaveBeenCalledWith(config, undefined);
     }
   });
 
@@ -74,23 +73,29 @@ describe("runSweep — pack-driven sources", () => {
 });
 
 describe("runDigestSweep — opts flow", () => {
-  it("calls every source with ({}, { days: 7 })", async () => {
+  it("calls every source with (config, { days: 7 })", async () => {
     const mocks = stubAllSources();
     const { runDigestSweep } = await import("../apis/briefing.mjs");
     const result = await runDigestSweep();
 
     expect(result.sourcesTotal).toBe(EXAMPLE_SOURCES.length);
-    for (const [index, [name]] of EXAMPLE_SOURCES.entries()) {
-      // Digest sweep passes the 7-day window as opts; config unchanged.
-      expect(mocks[name]).toHaveBeenCalledWith(
-        example.sources[index].config,
-        { days: 7 },
-      );
+    for (const [name, , config] of EXAMPLE_SOURCES) {
+      expect(mocks[name]).toHaveBeenCalledWith(config, { days: 7 });
+    }
+  });
+
+  it("window override: days:1 flows to every source (daily edition)", async () => {
+    const mocks = stubAllSources();
+    const { runDigestSweep } = await import("../apis/briefing.mjs");
+    await runDigestSweep({ days: 1 });
+
+    for (const [name, , config] of EXAMPLE_SOURCES) {
+      expect(mocks[name]).toHaveBeenCalledWith(config, { days: 1 });
     }
   });
 });
 
-describe("analyzeWithLLM — pack-provided prompt", () => {
+describe("analyzeWithLLM — prompt override", () => {
   const sweep = { sources: [], sourcesOk: 0, timestamp: "2026-04-18T00:00:00.000Z" };
   const makeLlm = () => ({
     name: "t",
@@ -98,11 +103,11 @@ describe("analyzeWithLLM — pack-provided prompt", () => {
     chat: vi.fn().mockResolvedValue('{"summary":"s"}'),
   });
 
-  it("uses the pack prompt when provided", async () => {
+  it("uses the override prompt when provided", async () => {
     const { analyzeWithLLM } = await import("../lib/llm/analysis.mjs");
     const llm = makeLlm();
-    await analyzeWithLLM(llm, sweep, { prompt: "EXAMPLE PACK PROMPT" });
-    expect(llm.chat.mock.calls[0][0][0].content.startsWith("EXAMPLE PACK PROMPT")).toBe(
+    await analyzeWithLLM(llm, sweep, { prompt: "MAC PROMPT" });
+    expect(llm.chat.mock.calls[0][0][0].content.startsWith("MAC PROMPT")).toBe(
       true,
     );
   });
@@ -116,17 +121,17 @@ describe("analyzeWithLLM — pack-provided prompt", () => {
   });
 });
 
-describe("generateWeeklyDigest — pack-provided prompt + freshSources", () => {
+describe("generateWeeklyDigest — freshSources override", () => {
   const sweep = {
     sourcesOk: 1,
     timestamp: "2026-04-18T00:00:00.000Z",
     sources: [
       {
-        source: "Undated Source",
+        source: "Mac Source",
         status: "ok",
         data: {
           category: "news",
-          items: [{ title: "UndatedWidget ships", url: "https://example.test/u" }],
+          items: [{ title: "MacWidget ships", url: "https://example.test/mac" }],
         },
       },
     ],
@@ -147,20 +152,8 @@ describe("generateWeeklyDigest — pack-provided prompt + freshSources", () => {
       freshSources: ["Hacker News"],
     });
     expect(llm.chat.mock.calls[0][0][0].content).not.toContain(
-      "UndatedWidget ships",
+      "MacWidget ships",
     );
-  });
-
-  it("freshSources override includes undated items from that source", async () => {
-    const { generateWeeklyDigest } = await import(
-      "../lib/llm/weekly-digest.mjs"
-    );
-    const llm = makeLlm();
-    await generateWeeklyDigest(llm, sweep, {
-      prompt: "P",
-      freshSources: ["Undated Source"],
-    });
-    expect(llm.chat.mock.calls[0][0][0].content).toContain("UndatedWidget ships");
   });
 
   it("no defaults — missing prompt/freshSources throws loudly", async () => {
@@ -172,10 +165,22 @@ describe("generateWeeklyDigest — pack-provided prompt + freshSources", () => {
       /freshSources/,
     );
   });
+
+  it("freshSources override includes undated items from that source", async () => {
+    const { generateWeeklyDigest } = await import(
+      "../lib/llm/weekly-digest.mjs"
+    );
+    const llm = makeLlm();
+    await generateWeeklyDigest(llm, sweep, {
+      prompt: "P",
+      freshSources: ["Mac Source"],
+    });
+    expect(llm.chat.mock.calls[0][0][0].content).toContain("MacWidget ships");
+  });
 });
 
 describe("SOURCE_COUNT / SOURCE_NAMES exports", () => {
-  it("resolve the env-selected pack at import time", async () => {
+  it("resolve the env-selected pack at import time (default example)", async () => {
     process.env.PULSE_DOMAIN = "example";
     vi.resetModules();
     const m = await import("../apis/briefing.mjs");

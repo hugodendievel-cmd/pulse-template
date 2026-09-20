@@ -112,21 +112,20 @@ describe("digest guard — weekId-based once-per-week logic", () => {
     // Guard condition: latest.weekId !== stale → proceed
   });
 
-  it("dashboard/public/app.js handles 409 without showError and prepends digest-notice", () => {
+  it("dashboard/public/app.js handles 409 without showError and re-renders the digest", () => {
     const appSrc = readFileSync(
       resolve(root, "dashboard", "public", "app.js"),
       "utf-8",
     );
     // 409 branch exists
     expect(appSrc).toMatch(/res\.status\s*===\s*409/);
-    // Uses existing digest metadata
+    // Uses existing digest metadata, merged over the last digest
     expect(appSrc).toMatch(/payload\.existing/);
-    // Shows "Already generated for this week" inline note (not error banner)
-    expect(appSrc).toMatch(/Already generated for this week/);
-    // Uses existing timeAgo helper
-    expect(appSrc).toMatch(/timeAgo\(payload\.existing\.generatedAt\)/);
-    // Notice auto-removes after 5 seconds (like existing showError pattern)
-    expect(appSrc).toMatch(/notice\.remove\(\)/);
+    expect(appSrc).toMatch(
+      /renderDigest\(\{\s*\.\.\.lastDigest,\s*\.\.\.payload\.existing\s*\}\)/,
+    );
+    // Surfaced as a state note, not an error banner
+    expect(appSrc).not.toMatch(/showError\([^)]*payload\.existing/);
   });
 
   it("409 body shape includes existing.generatedAt, existing.weekId, existing.weekOf", async () => {
@@ -157,5 +156,86 @@ describe("digest guard — weekId-based once-per-week logic", () => {
     expect(body.existing.generatedAt).toBeTruthy();
     expect(body.existing.weekId).toMatch(/^\d{4}-W\d{2}$/);
     expect(body.existing.weekOf).toBe("2026-04-13");
+  });
+});
+
+describe("digest guard — client presentation contract (Story 5.2)", () => {
+  const appSrc = readFileSync(
+    resolve(root, "dashboard", "public", "app.js"),
+    "utf-8",
+  );
+
+  it("seeds currentWeekId from /api/health", () => {
+    expect(appSrc).toMatch(/currentWeekId:\s*""/);
+    expect(appSrc).toMatch(/state\.currentWeekId\s*=\s*h\?\.currentWeekId/);
+  });
+
+  it("surfaces the once-per-week guard as a render-time note", () => {
+    // Deterministic note on render when the digest belongs to the current week.
+    expect(appSrc).toMatch(
+      /lastDigest\.weekId\s*===\s*state\.currentWeekId/,
+    );
+    expect(appSrc).toContain("already generated this week");
+  });
+
+  it("never sends the operator-only force query", () => {
+    expect(appSrc).not.toContain("force=1");
+    expect(appSrc).not.toMatch(/[?&]force/);
+  });
+
+  it("keeps the regeneration request POST-only", () => {
+    expect(appSrc).toMatch(
+      /fetch\("\/api\/digest\/generate",\s*\{\s*method:\s*"POST"\s*\}\)/,
+    );
+  });
+
+  it("disables the control while generation is in flight", () => {
+    expect(appSrc).toMatch(/btn\.disabled\s*=\s*true/);
+    expect(appSrc).toContain("digest-loading");
+  });
+
+  it("a failure restores the last digest instead of clearing content", () => {
+    // showError re-renders lastDigest before prepending the transient notice.
+    expect(appSrc).toMatch(
+      /function showError\(msg\)\s*\{[\s\S]*?if \(lastDigest\) \{\s*renderDigest\(lastDigest\);/,
+    );
+  });
+
+  it("renders no accumulating-draft UI (deferred scope)", () => {
+    expect(appSrc).not.toContain("daysCollected");
+    expect(appSrc).not.toContain("shaping up");
+    expect(appSrc).not.toContain("read draft");
+    expect(appSrc).not.toMatch(/weekday/i);
+  });
+
+  it("labels the weekly card with the ISO week and the pack run time (AC6)", () => {
+    // Label is derived from the pure helper and the pack's `weeklyRun`, never
+    // from `weekOf` (a date string) or duplicated ISO arithmetic.
+    expect(appSrc).toMatch(/RenderCore\.weekNumberOf\(digest\.weekId\)/);
+    // The card's label row carries it once, via the panel header meta — the
+    // toolbar used to repeat the same string directly beneath it.
+    expect(appSrc).toMatch(/week \$\{weekNo\} · \$\{runLabel\}/);
+    expect(appSrc).not.toContain('class="digest-toolbar"');
+    // Empty state: `sun 18:00 · next run`.
+    expect(appSrc).toMatch(/\$\{esc\(p\.weeklyRun \|\| ""\)\} · next run/);
+    // Lowercase signature chrome, both controls.
+    expect(appSrc).toContain("generate weekly digest");
+    expect(appSrc).toContain(">regenerate</button>");
+  });
+
+  it("renders the digest body on a successful generate (AC1)", () => {
+    expect(appSrc).toMatch(
+      /if \(res\.ok\) \{\s*const digest = await res\.json\(\);\s*renderDigest\(digest\);/,
+    );
+  });
+
+  it("gives the weekly digest body the green-tint card surface (AC1)", () => {
+    const css = readFileSync(
+      resolve(root, "dashboard", "public", "style.css"),
+      "utf-8",
+    );
+    expect(css).toMatch(
+      /\.panel\[data-panel-id="digest"\] \.digest-body\s*\{[^}]*background:\s*var\(--green-tint\)/,
+    );
   });
 });

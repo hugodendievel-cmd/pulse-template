@@ -42,7 +42,7 @@ describe("lib/llm/budget.mjs", () => {
   });
 
   it("loadBudget() on corrupt JSON returns default and logs pino.warn", async () => {
-    const memDir = join(tmpDir, ".ai-pulse", "memory");
+    const memDir = join(tmpDir, ".pulse", "memory");
     mkdirSync(memDir, { recursive: true });
     writeFileSync(join(memDir, "llm-budget.json"), "not-valid-json{{{");
 
@@ -58,7 +58,7 @@ describe("lib/llm/budget.mjs", () => {
   });
 
   it("loadBudget() on wrong-shape JSON returns default and logs pino.warn", async () => {
-    const memDir = join(tmpDir, ".ai-pulse", "memory");
+    const memDir = join(tmpDir, ".pulse", "memory");
     mkdirSync(memDir, { recursive: true });
     writeFileSync(
       join(memDir, "llm-budget.json"),
@@ -103,7 +103,7 @@ describe("lib/llm/budget.mjs", () => {
   it("incrementBudget() resets to 1 when stored day is yesterday (Brussels rollover)", async () => {
     // Write a budget file with a stale day value — the rollover path is
     // triggered purely by the stored `day` not matching `todayBrussels()`.
-    const memDir = join(tmpDir, ".ai-pulse", "memory");
+    const memDir = join(tmpDir, ".pulse", "memory");
     mkdirSync(memDir, { recursive: true });
     writeFileSync(
       join(memDir, "llm-budget.json"),
@@ -133,7 +133,7 @@ describe("lib/llm/budget.mjs", () => {
 
     // Simulate the clock crossing midnight: the on-disk `day` is no longer
     // today. Same module instance (no reset).
-    const budgetPath = join(tmpDir, ".ai-pulse", "memory", "llm-budget.json");
+    const budgetPath = join(tmpDir, ".pulse", "memory", "llm-budget.json");
     writeFileSync(
       budgetPath,
       JSON.stringify({ day: "1999-01-01", count: 2 }),
@@ -168,8 +168,8 @@ describe("lib/llm/budget.mjs", () => {
     const { incrementBudget } = await import("../lib/llm/budget.mjs");
     incrementBudget();
 
-    const tmpPath = join(tmpDir, ".ai-pulse", "memory", "llm-budget.json.tmp");
-    const finalPath = join(tmpDir, ".ai-pulse", "memory", "llm-budget.json");
+    const tmpPath = join(tmpDir, ".pulse", "memory", "llm-budget.json.tmp");
+    const finalPath = join(tmpDir, ".pulse", "memory", "llm-budget.json");
 
     expect(existsSync(tmpPath)).toBe(false);
     expect(existsSync(finalPath)).toBe(true);
