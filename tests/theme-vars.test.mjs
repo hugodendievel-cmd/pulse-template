@@ -41,3 +41,125 @@ describe("digest panel CSS variables", () => {
     expect(definedInRoot("--card")).toBe(true);
   });
 });
+
+// ── Semantic token layer (Story 2.1) ──────────────────────────────────────
+// The 19 semantic tokens are the source of truth in each theme block; legacy
+// tokens are redefined as aliases of them so component selectors keep working.
+const SEMANTIC_TOKENS = [
+  "--paper",
+  "--surface",
+  "--surface-2",
+  "--inset",
+  "--strip",
+  "--ink",
+  "--ink-2",
+  "--ink-3",
+  "--ink-4",
+  "--hairline",
+  "--green",
+  "--green-ink",
+  "--green-tint",
+  "--green-tint-2",
+  "--green-soft",
+  "--amber-ink",
+  "--amber-tint",
+  "--amber-dot",
+  "--idle",
+];
+
+const LEGACY_ALIASES = [
+  "--bg",
+  "--bg2",
+  "--bg3",
+  "--bg4",
+  "--text",
+  "--text2",
+  "--muted",
+  "--dim",
+  "--accent",
+  "--accent2",
+  "--border",
+  "--border2",
+];
+
+// Extract a token block (selector `{ … }`, values contain no braces).
+function extractBlock(selectorPattern) {
+  const match = css.match(new RegExp(`${selectorPattern}\\s*\\{([^}]+)\\}`));
+  return match ? match[1] : "";
+}
+
+// True when the block declares `name:` (a definition, not a `var(name)` usage).
+function declares(block, name) {
+  return new RegExp(`${name}\\s*:`).test(block);
+}
+
+// The declared value of `name` inside the block, or null when absent.
+function declarationValue(block, name) {
+  const match = block.match(new RegExp(`${name}\\s*:\\s*([^;]+);`));
+  return match ? match[1].trim() : null;
+}
+
+const THEME_BLOCKS = {
+  ":root": extractBlock(":root"),
+  "html.light": extractBlock("html\\.light"),
+  "html.terminal": extractBlock("html\\.terminal"),
+};
+
+describe("semantic token layer with legacy aliases", () => {
+  it("declares all 19 semantic tokens in every theme block", () => {
+    for (const [selector, block] of Object.entries(THEME_BLOCKS)) {
+      for (const token of SEMANTIC_TOKENS) {
+        expect(declares(block, token), `${selector} ${token}`).toBe(true);
+      }
+    }
+  });
+
+  it("declares every semantic token at least 3 times (once per theme)", () => {
+    for (const token of SEMANTIC_TOKENS) {
+      expect(countDefinitions(token), token).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it("redefines every legacy token as an alias containing var( in every theme block", () => {
+    for (const [selector, block] of Object.entries(THEME_BLOCKS)) {
+      for (const token of LEGACY_ALIASES) {
+        const value = declarationValue(block, token);
+        expect(value, `${selector} ${token}`).not.toBeNull();
+        expect(value, `${selector} ${token}`).toContain("var(");
+      }
+    }
+  });
+
+  it("maps every legacy alias to its expected semantic token", () => {
+    const expected = {
+      "--bg": "--paper",
+      "--bg2": "--surface",
+      "--bg3": "--surface-2",
+      "--bg4": "--inset",
+      "--text": "--ink",
+      "--text2": "--ink-2",
+      "--muted": "--ink-3",
+      "--dim": "--ink-4",
+      "--accent": "--green-ink",
+      "--accent2": "--green",
+      "--border": "--hairline",
+    };
+    for (const [selector, block] of Object.entries(THEME_BLOCKS)) {
+      for (const [legacy, semantic] of Object.entries(expected)) {
+        expect(declarationValue(block, legacy), `${selector} ${legacy}`).toBe(
+          `var(${semantic})`,
+        );
+      }
+    }
+  });
+
+  it("keeps --text-dim and --card explicit (not var()) in every theme block", () => {
+    for (const [selector, block] of Object.entries(THEME_BLOCKS)) {
+      for (const token of ["--text-dim", "--card"]) {
+        const value = declarationValue(block, token);
+        expect(value, `${selector} ${token}`).not.toBeNull();
+        expect(value, `${selector} ${token}`).not.toContain("var(");
+      }
+    }
+  });
+});

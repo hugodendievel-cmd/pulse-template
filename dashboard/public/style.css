@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   AI PULSE — Premium Intelligence Dashboard
+   PULSE — Premium Intelligence Dashboard
    Design System v2.1
 
    TABLE OF CONTENTS
@@ -31,21 +31,79 @@
   padding: 0;
 }
 
-:root {
-  /* Core palette — lighter neutral dark for readability (surface steps
-     from v7labs.com: bg #1c1c1c · card #242424 · chip #292929 · fill #333332) */
-  --bg: #1c1c1c;
-  --bg2: #242424;
-  --bg3: #292929;
-  --bg4: #333332;
-  --border: rgba(255, 255, 255, 0.1);
-  --border2: rgba(255, 255, 255, 0.18);
+/* ── Self-hosted fonts (same-origin) ── */
+/* Inter is a variable font (wght 400–700); one file covers every weight the
+   UI uses. Self-hosted same-origin — the CSP (Story 2.3) allows no external
+   font host, and the pre-redesign build pulled this same family from Google
+   Fonts. */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url("fonts/inter.woff2") format("woff2");
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("fonts/jetbrains-mono-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("fonts/jetbrains-mono-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("fonts/jetbrains-mono-700.woff2") format("woff2");
+}
 
-  /* Accent spectrum — dendievel.me green */
-  --accent: #20e467;
-  --accent2: #4ce884;
+:root {
+  /* Semantic tokens — source of truth (dark default = pre-hydration first paint) */
+  color-scheme: dark;
+  --paper: #1d1b19;
+  --surface: #232120;
+  --surface-2: #151413;
+  --inset: #2b2825;
+  --strip: #1f1d1b;
+  --ink: #e8e4dc;
+  --ink-2: #b8b2a8;
+  --ink-3: #a49e94;
+  --ink-4: #9a948a;
+  --hairline: rgba(232, 228, 220, 0.08);
+  --green: #12a150;
+  --green-ink: #5fcf8c;
+  --green-tint: #1c3325;
+  --green-tint-2: #1e2c22;
+  --green-soft: #7cc294;
+  --amber-ink: #e0a35c;
+  --amber-tint: #3a2c18;
+  --amber-dot: #d8b26a;
+  --idle: #33302c;
+
+  /* Legacy aliases — every existing component selector keeps working */
+  --bg: var(--paper);
+  --bg2: var(--surface);
+  --bg3: var(--surface-2);
+  --bg4: var(--inset);
+  --text: var(--ink);
+  --text2: var(--ink-2);
+  --muted: var(--ink-3);
+  --dim: var(--ink-4);
+  --accent: var(--green-ink);
+  --accent2: var(--green);
+  --border: var(--hairline);
+  --border2: color-mix(in srgb, var(--ink) 18%, transparent);
+
+  /* Categorical palette — data-viz only, not part of the semantic set */
   --cyan: #22d3ee;
-  --green: #34d399;
   --amber: #fbbf24;
   --red: #f87171;
   --blue: #60a5fa;
@@ -53,16 +111,10 @@
   --pink: #f472b6;
   --orange: #fb923c;
 
-  /* Text hierarchy — v7labs.com dark text ramp: body ~85% white, muted #adadad */
-  --text: #eaeaea;
-  --text2: #cfcfcf;
-  --muted: #adadad;
-  --dim: #8a8a8a;
-
   /* Typography */
   --font:
-    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
-    sans-serif;
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    system-ui, sans-serif;
   --mono: "JetBrains Mono", "SF Mono", "Fira Code", monospace;
 
   /* Spacing */
@@ -70,10 +122,9 @@
   --radius-sm: 6px;
   --radius-xs: 6px;
 
-  /* Green alpha — dendievel.me tag recipe */
-  --green-soft: rgba(32, 228, 103, 0.18);
-  --green-faint: rgba(32, 228, 103, 0.08);
-  --green-line: rgba(32, 228, 103, 0.45);
+  /* Translucent green helpers — derived from the semantic green */
+  --green-faint: color-mix(in srgb, var(--green) 8%, transparent);
+  --green-line: color-mix(in srgb, var(--green) 45%, transparent);
 
   /* Effects */
   --glass: rgba(255, 255, 255, 0.04);
@@ -81,14 +132,19 @@
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
   --shadow-lg: 0 4px 6px rgba(0, 0, 0, 0.3), 0 12px 40px rgba(0, 0, 0, 0.4);
 
-  /* Digest panel */
-  --text-dim: #adadad;
-  --card: #242424;
+  /* Digest panel — explicit, never aliased (theme-vars.test.mjs contract) */
+  --text-dim: #a49e94;
+  --card: #232120;
 }
 
 html {
   font-size: 14px;
   scroll-behavior: smooth;
+  /* iOS Safari auto-inflates long nowrap lines (the marquee track) to a size
+     of its choosing, ignoring the declared px. Pinning this disables that
+     text autosizing so the ticker keeps the size we set. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -112,39 +168,65 @@ a:hover {
 }
 
 /* ────────────────── Light Theme — dendievel.me paper ────────────────── */
-/* Re-synced 2026-09-10 with dendievel.me/style.css as shipped:
-   paper #f5f1e9 · paper-soft #e8e4db · paper-warm #fcf8f2 · ink-faint #d1cdc6
-   ink #2a1e1a / #443733 / #675b54 (dim #776c64 derived, one step lighter)
-   shadows rgba(42,30,26,…) · green #20e467 · green-deep #15a04a (accent) */
+/* Default theme. Values from design-reference §3 (Light). */
 html.light {
-  --bg: #f5f1e9;
-  --bg2: #fcf8f2;
-  --bg3: #e8e4db;
-  --bg4: #d1cdc6;
-  --border: #d1cdc6;
-  --border2: rgba(42, 30, 26, 0.25);
-  --accent: #15a04a;
-  --accent2: #20e467;
+  /* Semantic tokens — source of truth */
+  color-scheme: light;
+  --paper: #f5f1e9;
+  --surface: #faf8f3;
+  --surface-2: #f1ede4;
+  --inset: #ece8de;
+  --strip: #efeade;
+  --ink: #1d1b19;
+  --ink-2: #3b3732;
+  --ink-3: #55504a;
+  --ink-4: #6b665e;
+  --hairline: rgba(29, 27, 25, 0.08);
+  --green: #12a150;
+  --green-ink: #0c7a3d;
+  --green-tint: #e0efe3;
+  --green-tint-2: #e4f0e4;
+  --green-soft: #7cc294;
+  --amber-ink: #96500c;
+  --amber-tint: #fbe8d4;
+  --amber-dot: #d8b26a;
+  --idle: #ddd7c9;
+
+  /* Legacy aliases */
+  --bg: var(--paper);
+  --bg2: var(--surface);
+  --bg3: var(--surface-2);
+  --bg4: var(--inset);
+  --text: var(--ink);
+  --text2: var(--ink-2);
+  --muted: var(--ink-3);
+  --dim: var(--ink-4);
+  --accent: var(--green-ink);
+  --accent2: var(--green);
+  --border: var(--hairline);
+  --border2: color-mix(in srgb, var(--ink) 18%, transparent);
+
+  /* Categorical palette — data-viz only */
   --cyan: #0891b2;
-  --green: #059669;
   --amber: #d97706;
   --red: #dc2626;
   --blue: #2563eb;
   --purple: #7c3aed;
   --pink: #db2777;
   --orange: #ea580c;
-  --text: #2a1e1a;
-  --text2: #443733;
-  --muted: #675b54;
-  --dim: #776c64;
+
+  /* Translucent green helpers — derived from the semantic green */
+  --green-faint: color-mix(in srgb, var(--green) 8%, transparent);
+  --green-line: color-mix(in srgb, var(--green) 45%, transparent);
+
   --glass: rgba(245, 241, 233, 0.85);
   --glow: 0 6px 18px rgba(32, 228, 103, 0.18);
   --shadow: 0 14px 36px rgba(42, 30, 26, 0.08);
   --shadow-lg: 0 22px 50px rgba(42, 30, 26, 0.18);
 
-  /* Digest panel */
-  --text-dim: #675b54;
-  --card: #fcf8f2;
+  /* Digest panel — explicit, never aliased */
+  --text-dim: #55504a;
+  --card: #faf8f3;
 }
 
 html.light body {
@@ -157,25 +239,22 @@ html.light a {
 }
 
 html.light .header {
-  background: var(--bg);
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  border-bottom-color: var(--border2);
+  background: var(--surface);
 }
 
 html.light .panel {
-  background: var(--bg2);
-  border-color: var(--border);
-  box-shadow: var(--shadow);
+  box-shadow: 0 1px 2px rgba(29, 27, 25, 0.05);
 }
 
-html.light .stat-card {
-  border-color: var(--border);
+html.light .panel:hover {
+  box-shadow: 0 2px 4px rgba(29, 27, 25, 0.08);
 }
 
-html.light .ticker {
-  background: transparent;
-  border-bottom-color: var(--border);
+/* Bare bands never take a surface, in any theme. */
+html.light .panel--bare,
+html.light .panel--bare:hover {
+  background: none;
+  box-shadow: none;
 }
 
 html.light .news-item {
@@ -215,47 +294,7 @@ html.light .news-score {
   color: var(--text2);
 }
 
-html.light .loading-screen {
-  background: var(--bg);
-}
-html.light .loading-title {
-  color: var(--text);
-}
-html.light .loading-bar {
-  background: var(--bg4);
-}
-html.light .loading-bar-inner {
-  background: var(--accent);
-}
 
-html.light .source-modal {
-  background: var(--bg2);
-  box-shadow: var(--shadow-lg);
-}
-html.light .source-modal h3 {
-  color: var(--text2);
-}
-html.light .source-modal-overlay {
-  background: rgba(0, 0, 0, 0.2);
-}
-
-html.light .source-chip {
-  background: var(--bg3);
-  border-color: var(--border);
-}
-
-html.light .analysis-summary {
-  background: var(--bg3);
-  border-left-color: var(--accent);
-}
-
-html.light .stats-bar {
-  background: var(--bg2);
-}
-html.light .stat-card {
-  background: var(--bg3);
-  border-color: var(--border);
-}
 
 html.light .search-trigger {
   background: var(--bg3);
@@ -264,6 +303,15 @@ html.light .search-trigger {
 }
 html.light .search-trigger:hover {
   border-color: var(--accent);
+}
+html.light .header-link {
+  background: var(--bg3);
+  border-color: var(--border2);
+  color: var(--muted);
+}
+html.light .header-link:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 html.light .nav-pill {
   color: var(--muted);
@@ -274,9 +322,9 @@ html.light .nav-pill:hover {
 }
 
 html.light .nav-pill.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
+  background: var(--green);
+  border-color: var(--green);
+  color: var(--paper);
 }
 
 html.light .command-palette {
@@ -291,11 +339,6 @@ html.light .command-result-item.active {
   background: var(--bg3);
 }
 
-html.light .status-badge {
-  background: var(--bg3);
-  border-color: var(--border);
-}
-
 html.light .theme-toggle {
   background: var(--bg3);
   border-color: var(--border);
@@ -304,16 +347,6 @@ html.light .theme-toggle {
 html.light .theme-toggle:hover {
   border-color: var(--accent);
   color: var(--accent);
-}
-
-html.light .ticker-item a {
-  color: var(--muted);
-}
-
-html.light .trend-item {
-  background: rgba(32, 228, 103, 0.08);
-  color: var(--accent);
-  border-color: rgba(32, 228, 103, 0.2);
 }
 
 html.light .impact-badge.high {
@@ -334,26 +367,8 @@ html.light .cat-tag {
   color: var(--accent);
 }
 
-html.light .conf-high {
-  background: rgba(5, 150, 105, 0.1);
-  color: var(--green);
-}
-html.light .conf-medium {
-  background: rgba(217, 119, 6, 0.1);
-  color: var(--amber);
-}
-html.light .conf-low {
-  background: rgba(148, 163, 184, 0.1);
-  color: var(--muted);
-}
-
-html.light .radar-card {
-  background: var(--bg3);
-  border-color: var(--border);
-}
-
 html.light .section-label {
-  color: var(--text2);
+  color: var(--ink-4);
 }
 
 html.light .footer {
@@ -366,261 +381,106 @@ html.light .panel-body::-webkit-scrollbar-thumb {
   background: var(--dim);
 }
 
-html.light .stat-icon {
-  background: var(--bg4);
+/* ────────────────── Page shell ────────────────── */
+/* The handoff draws each screen as a 1280px card because that is how the
+   prototype presents a screen — the number that matters is the content width,
+   not the frame. Rendered as a floating window the sticky header detaches from
+   it on scroll and the chrome reads as a dialog, so the bands run full bleed
+   and their CONTENT is what stops at 1280: same measure, no window. */
+:root {
+  --page-max: 1280px;
+  --page-gutter: 28px;
 }
 
-/* dendievel.me card recipe for the loading source list:
-   hairline ink-faint border, tight ink shadow instead of the 36px fog */
-html.light .loading-step {
-  box-shadow:
-    0 1px 2px rgba(42, 30, 26, 0.04),
-    0 6px 16px rgba(42, 30, 26, 0.06);
+.shell {
+  width: 100%;
 }
 
-/* ────────────────── Loading Screen ────────────────── */
-.loading-screen {
-  position: fixed;
+/* Every band pads itself out to centre 1280px of content. */
+.header,
+.ticker,
+.dashboard,
+.footer {
+  /* --page-max is the design's 1280px shell, gutters included, so the gutter
+     is added back inside it: content lands at 1224 and the today main column
+     at 822 — the mock's exact measure. */
+  padding-left: max(
+    var(--page-gutter),
+    calc((100% - var(--page-max)) / 2 + var(--page-gutter))
+  );
+  padding-right: max(
+    var(--page-gutter),
+    calc((100% - var(--page-max)) / 2 + var(--page-gutter))
+  );
+}
+
+/* ────────────────── Skeleton loading ────────────────── */
+/* Boot shell paints immediately: the metrics strip and every panel frame carry
+   `.is-loading`; a panel body shows an `--inset` skeleton block that keeps
+   pulsing until its bound source reaches a terminal state or content lands. */
+.panel.is-loading .panel-body {
+  position: relative;
+  min-height: 72px;
+}
+
+.panel.is-loading .panel-body::after {
+  content: "";
+  position: absolute;
   inset: 0;
-  background: var(--bg);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 32px 16px;
-  z-index: 1000;
-  transition:
-    opacity 0.6s ease,
-    transform 0.6s ease;
+  border-radius: 6px;
+  background: var(--inset);
+  opacity: 0.55;
+  animation: skeleton-pulse 1.6s ease-in-out infinite;
 }
 
-.loading-screen.hidden {
-  opacity: 0;
-  transform: scale(1.02);
-  pointer-events: none;
+.panel.is-loading[data-resolved="true"] .panel-body::after {
+  animation: none;
+  opacity: 0.35;
 }
 
-/* dendievel.me loading: paper page, big lowercase wordmark + caret,
-   mono status line, hairline green progress bar. The HUD orb is history. */
-.loading-orb,
-.orb-icon {
-  display: none;
+#statsBar.is-loading {
+  opacity: 0.6;
 }
 
-.loading-title {
-  font-size: 2.6rem;
-  font-weight: 700;
-  color: var(--text);
-  letter-spacing: -0.02em;
-  margin-bottom: 8px;
-  text-transform: lowercase;
-}
-
-.loading-title span {
-  color: inherit;
-  font-weight: inherit;
-}
-
-.loading-stage {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 6px 12px;
-  margin-bottom: 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(34, 211, 238, 0.22);
-  background: rgba(34, 211, 238, 0.08);
-  color: var(--cyan);
-  font-family: var(--mono);
-  font-size: 0.66rem;
-  font-weight: 600;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-.loading-sub {
-  color: var(--muted);
-  font-size: 0.85rem;
-  margin-bottom: 14px;
-  letter-spacing: 0.5px;
-  text-align: center;
-  max-width: min(520px, 92vw);
-}
-
-.loading-meta {
-  width: min(460px, 92vw);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.04em;
-}
-
-.loading-bar {
-  width: min(460px, 92vw);
-  height: 6px;
-  background: var(--bg3);
-  border-radius: 4px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  margin-bottom: 18px;
-}
-
-.loading-bar-inner {
-  height: 100%;
-  background: var(--accent);
-  width: 0%;
-  transition: width 0.2s ease;
-  border-radius: 4px;
-}
-
-.loading-steps {
-  width: min(460px, 92vw);
-  display: grid;
-  gap: 10px;
-  max-height: min(40vh, 360px);
-  overflow-y: auto;
-  padding-right: 4px;
-}
-
-.loading-steps::-webkit-scrollbar {
-  width: 6px;
-}
-
-.loading-steps::-webkit-scrollbar-thumb {
-  background: var(--dim);
-  border-radius: 999px;
-}
-
-.loading-step {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  background: var(--card);
-  box-shadow: var(--shadow);
-}
-
-.loading-step-icon {
-  width: 22px;
-  height: 22px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  border-radius: 50%;
-  border: 1px solid var(--border2);
-  color: var(--muted);
-  background: var(--bg3);
-  font-family: var(--mono);
-  font-size: 0.72rem;
-}
-
-.loading-step-copy {
-  flex: 1;
-  min-width: 0;
-}
-
-.loading-step-label {
-  color: var(--text);
-  font-size: 0.82rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.loading-step-detail {
-  margin-top: 2px;
-  color: var(--muted);
-  font-size: 0.72rem;
-}
-
-.loading-step-status {
-  flex-shrink: 0;
-  color: var(--muted);
-  font-family: var(--mono);
-  font-size: 0.66rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.loading-step.state-running {
-  border-color: rgba(251, 191, 36, 0.22);
-}
-
-.loading-step.state-running .loading-step-icon {
-  color: var(--amber);
-  background: rgba(251, 191, 36, 0.12);
-  border-color: rgba(251, 191, 36, 0.24);
-  animation: pulse 1.4s infinite;
-}
-
-.loading-step.state-ok {
-  border-color: rgba(52, 211, 153, 0.22);
-}
-
-.loading-step.state-ok .loading-step-icon {
-  color: var(--green);
-  background: rgba(52, 211, 153, 0.12);
-  border-color: rgba(52, 211, 153, 0.24);
-}
-
-.loading-step.state-error {
-  border-color: rgba(248, 113, 113, 0.22);
-}
-
-.loading-step.state-error .loading-step-icon {
-  color: var(--red);
-  background: rgba(248, 113, 113, 0.12);
-  border-color: rgba(248, 113, 113, 0.24);
-}
-
-.loading-step.state-skipped .loading-step-icon,
-.loading-step.state-disabled .loading-step-icon,
-.loading-step.state-pending .loading-step-icon {
-  color: var(--dim);
-}
-
-@media (max-width: 640px) {
-  .loading-title {
-    font-size: 2rem;
-    letter-spacing: 4px;
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
   }
-
-  .loading-meta {
-    font-size: 0.66rem;
+  50% {
+    opacity: 0.7;
   }
+}
 
-  .loading-step {
-    padding: 9px 10px;
+/* Arrival motion: content fades in 150ms and rises 4px the first time a panel
+   leaves the skeleton state; the box itself never moves and lists never
+   re-sort. Scoped to that one transition — a periodic re-render must not
+   re-animate content the reader is already looking at. */
+.panel-body--entering > * {
+  animation: fade-rise 150ms ease-out both;
+}
+
+@keyframes fade-rise {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
   }
-
-  .loading-step-status {
-    display: none;
-  }
-
-  .loading-steps {
-    max-height: min(34vh, 320px);
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
 
 /* ────────────────── Header ────────────────── */
 .header {
-  background: rgba(28, 28, 28, 0.85);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-bottom: 1px solid var(--border);
-  padding: 0 24px;
-  height: 56px;
+  background: var(--surface);
+  border-bottom: none;
+  padding-top: 16px;
+  padding-bottom: 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 24px;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -640,13 +500,28 @@ html.light .loading-step {
   line-height: 1;
 }
 
-/* Site has no logo icon — the wordmark + caret is the brand */
-.logo-mark,
-.logo-mark svg {
-  display: none;
+.logo-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+/* Environment tag (e.g. "acc") shown beside the wordmark on non-production
+   deployments. Rendered only when PULSE_ENV_LABEL is set. */
+.env-tag {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--amber-tint);
+  color: var(--amber-ink);
 }
 
 .logo h1 {
+  font-family: var(--mono);
   font-size: 1.1rem;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -659,8 +534,7 @@ html.light .loading-step {
 
 /* dendievel.me signature caret — CSS-only so it survives __PULSE_NAME_HTML__
    branding injection (no markup element to overwrite). */
-.logo h1::after,
-.loading-title::after {
+.logo h1::after {
   content: "";
   display: inline-block;
   width: 0.55rem;
@@ -679,8 +553,10 @@ html.light .loading-step {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .logo h1::after,
-  .loading-title::after {
+  .logo h1::after {
+    animation: none;
+  }
+  .status-dot[data-state="connected"] {
     animation: none;
   }
 }
@@ -712,21 +588,6 @@ html.light .loading-step {
   .logo-credit {
     display: none;
   }
-}
-
-.hamburger {
-  display: none;
-  background: none;
-  border: none;
-  color: var(--text2);
-  cursor: pointer;
-  padding: 6px;
-  border-radius: var(--radius-sm);
-  transition: background 0.2s;
-}
-
-.hamburger:hover {
-  background: var(--bg3);
 }
 
 .header-nav {
@@ -764,16 +625,37 @@ html.light .loading-step {
 }
 
 .nav-pill.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #06130b;
+  background: var(--green);
+  border-color: var(--green);
+  color: var(--paper);
   box-shadow: 0 2px 8px rgba(32, 228, 103, 0.3);
+}
+
+/* Bottom-anchored segmented nav (<900px). Hidden on desktop; the media
+   contract below flips it to a flex bar on mobile. Buttons reuse .nav-pill so
+   the active state styling is shared with the header nav. */
+.bottom-nav {
+  display: none;
+  position: fixed;
+  inset: auto 0 0 0;
+  z-index: 90;
+  background: var(--surface);
+  border-top: 1px solid var(--hairline);
+  padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
+  gap: 6px;
+  justify-content: space-around;
+}
+
+.bottom-nav .nav-pill {
+  flex: 1;
+  text-align: center;
 }
 
 .header-right {
   display: flex;
   align-items: center;
   gap: 12px;
+  position: relative;
 }
 
 /* Search trigger */
@@ -791,6 +673,36 @@ html.light .loading-step {
   cursor: pointer;
   transition: all 0.15s;
   min-width: 200px;
+}
+
+/* Daily Edition link — header-right pill, same family as the search trigger */
+.header-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--inset);
+  border: none;
+  border-radius: 999px;
+  padding: 8px 14px;
+  color: var(--ink-2);
+  font-family: var(--mono);
+  font-size: 12.5px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.15s;
+}
+
+.header-link[hidden] {
+  display: none;
+}
+
+.header-link:hover {
+  color: var(--ink);
+}
+
+.header-link svg {
+  flex-shrink: 0;
+  opacity: 0.55;
 }
 
 .search-trigger:hover {
@@ -824,68 +736,83 @@ html.light .loading-step {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex: none;
   width: 34px;
   height: 34px;
-  background: none;
+  background: var(--inset);
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: 999px;
   cursor: pointer;
-  color: var(--muted);
-  transition: all 0.2s;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  line-height: 1;
+  color: var(--ink-3);
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 
 .theme-toggle:hover {
-  background: var(--bg3);
-  color: var(--accent);
+  color: var(--ink);
 }
 
-html.light .icon-sun {
-  display: none;
-}
-html:not(.light) .icon-moon {
-  display: none;
-}
-
-/* Status badge */
+/* Status badge — live pill (design 3a item 1 / §5 SSE states) */
 .status-badge {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 5px 14px;
-  font-size: 0.7rem;
-  color: var(--muted);
+  gap: 8px;
+  border: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--green-tint);
+  color: var(--green-ink);
+  border-radius: 999px;
+  padding: 4px 10px;
   font-family: var(--mono);
+  font-size: 11.5px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
-}
-
-.status-badge:hover {
-  border-color: var(--accent);
 }
 
 .status-sep {
   color: var(--dim);
 }
 
+/* Reconnecting/offline blank the age (`{n}s`), so hide the empty span and the
+   separator before it — otherwise the pill renders a doubled `· ·`. */
+#sweepTime:empty,
+.status-sep:has(+ #sweepTime:empty) {
+  display: none;
+}
+
 .status-dot {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   display: inline-block;
   flex-shrink: 0;
+  background: var(--green);
 }
 
-/* Flat state dots — the caret is this page's only motion */
-.status-dot.live {
-  background: var(--accent);
+/* Only the connected state pulses; reconnecting/offline stay flat. */
+.status-dot[data-state="connected"] {
+  animation: pulse 1.6s ease-in-out infinite;
 }
 
-.status-dot.loading {
-  background: var(--amber);
+.status-dot[data-state="reconnecting"] {
+  background: var(--amber-dot);
+  animation: none;
+}
+
+.status-dot[data-state="offline"] {
+  background: var(--ink-4);
+  animation: none;
+}
+
+.status-badge:has(.status-dot[data-state="offline"]) {
+  background: var(--inset);
+  color: var(--ink-4);
 }
 
 @keyframes pulse {
@@ -894,7 +821,7 @@ html:not(.light) .icon-moon {
     opacity: 1;
   }
   50% {
-    opacity: 0.3;
+    opacity: 0.25;
   }
 }
 
@@ -916,12 +843,14 @@ html:not(.light) .icon-moon {
 }
 
 .command-palette {
-  width: 560px;
-  max-width: 90vw;
-  background: var(--bg2);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-lg);
+  width: 620px;
+  max-width: calc(100vw - 32px);
+  background: var(--surface);
+  border: none;
+  border-radius: 14px;
+  box-shadow:
+    0 1px 2px rgba(29, 27, 25, 0.06),
+    0 32px 80px -24px rgba(29, 27, 25, 0.45);
   overflow: hidden;
   animation: command-enter 0.15s ease;
 }
@@ -940,9 +869,24 @@ html:not(.light) .icon-moon {
 .command-input-wrap {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--border);
+  gap: 12px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+/* The whole row lights up, not the bare input. */
+.command-input-wrap:focus-within {
+  border-bottom-color: var(--green);
+}
+
+.command-input-wrap > svg {
+  flex: none;
+  color: var(--ink-4);
+}
+
+/* An empty result list must not leave a bare strip under the field. */
+.command-results:empty {
+  display: none;
 }
 
 .command-input-wrap svg {
@@ -952,12 +896,13 @@ html:not(.light) .icon-moon {
 
 .command-input {
   flex: 1;
+  min-width: 0;
   background: none;
   border: none;
   outline: none;
   font-family: var(--font);
-  font-size: 0.95rem;
-  color: var(--text);
+  font-size: 16px;
+  color: var(--ink);
 }
 
 .command-input::placeholder {
@@ -965,13 +910,14 @@ html:not(.light) .icon-moon {
 }
 
 .command-input-wrap kbd {
-  font-family: var(--font);
-  font-size: 0.6rem;
-  background: var(--bg4);
-  padding: 2px 6px;
+  flex: none;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  background: var(--inset);
+  padding: 4px 7px;
   border-radius: 4px;
-  color: var(--dim);
-  border: 1px solid var(--border);
+  color: var(--ink-4);
+  border: none;
 }
 
 .command-results {
@@ -1023,33 +969,53 @@ html:not(.light) .icon-moon {
 
 /* ────────────────── News Ticker ────────────────── */
 .ticker {
-  background: transparent;
-  border-bottom: 1px solid var(--border);
-  padding: 5px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--inset);
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-3);
+  padding-top: 10px;
+  padding-bottom: 10px;
   overflow: hidden;
   white-space: nowrap;
-  opacity: 0.75;
+}
+
+.ticker-label {
+  flex: none;
+  color: var(--ink-4);
+  text-transform: lowercase;
+}
+
+.ticker-sep {
+  flex: none;
+  color: var(--ink-4);
+}
+
+.ticker-viewport {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .ticker-inner {
-  display: inline-block;
-  animation: scroll-left 450s linear infinite;
-}
-
-.ticker-inner:hover {
-  animation-play-state: paused;
+  display: inline-flex;
+  flex: none;
+  will-change: transform;
+  white-space: nowrap;
+  animation: ticker-scroll var(--ticker-duration, 40s) linear infinite;
 }
 
 .ticker-item {
-  display: inline;
+  display: inline-flex;
+  align-items: baseline;
   margin-right: 40px;
-  font-size: 0.68rem;
-  font-family: var(--mono);
-  color: var(--dim);
+  color: var(--ink-3);
 }
 
 .ticker-src {
-  color: var(--dim);
+  color: var(--ink-4);
 }
 
 .ticker-src::after {
@@ -1057,99 +1023,53 @@ html:not(.light) .icon-moon {
   margin: 0 2px;
 }
 
-.ticker-item a {
-  color: var(--muted);
+/* `.ticker` prefix: `html.light a` (0,1,2) outranks a bare `.ticker-item a`
+   (0,1,1), so without it every marquee link rendered green in light theme. */
+.ticker .ticker-item a {
+  color: var(--ink-3);
   transition: color 0.15s;
 }
 
-.ticker-item a:hover {
-  color: var(--accent);
+.ticker .ticker-item a:hover {
+  color: var(--green);
 }
 
-@keyframes scroll-left {
-  0% {
+@keyframes ticker-scroll {
+  from {
     transform: translateX(0);
   }
-  100% {
+  to {
     transform: translateX(-50%);
   }
 }
 
-/* ────────────────── Stats Bar ────────────────── */
-.stats-bar {
-  display: flex;
-  gap: 12px;
-  padding: 16px 24px;
-  background: var(--bg);
-  border-bottom: 1px solid var(--border);
-}
+/* ────────────────── Metrics strip ────────────────── */
+/* One mono row built from the pack's `stats` (design 3a item 2). The `<900px`
+   media query switches it to a 2×2 grid; the runtime reveal must therefore
+   clear the inline display rather than hard-code `flex`. */
 
-.stat-card {
-  flex: 1;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px 20px;
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  transition:
-    border-color 0.2s,
-    box-shadow 0.2s;
-}
 
-/* No iconography in the site's language — numbers carry the card */
-.stat-icon {
-  display: none;
-}
 
-.stat-card:hover {
-  border-color: var(--border2);
-  box-shadow: var(--glow);
-}
 
-.stat-number {
-  font-size: 1.5rem;
-  font-weight: 700;
-  font-family: var(--mono);
-  color: var(--text);
-  letter-spacing: -0.02em;
-  line-height: 1;
-}
 
-.stat-label {
-  font-size: 0.7rem;
-  color: var(--muted);
-  font-family: var(--mono);
-  margin-top: 2px;
-}
 
-.stat-sub {
-  font-size: 0.68rem;
-  color: var(--dim);
-  font-family: var(--mono);
-  margin-top: 2px;
-}
+/* design 3a: freshness is right-aligned, closing the strip. It takes the free
+   space, so it carries no separator of its own. */
 
-/* ── Mini Charts ── */
-.mini-chart {
-  display: flex;
-  align-items: flex-end;
-  gap: 2px;
-  height: 32px;
-  overflow: visible;
-  margin-bottom: 14px;
-}
 
-.mini-bar {
-  width: 16px;
-  border-radius: 3px 3px 0 0;
-  min-height: 2px;
-  transition: height 0.4s ease;
-  position: relative;
-  background: var(--accent);
-  opacity: 0.75;
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* LLM-off quiet placeholder inside briefing/radar panels */
 .panel-hint {
@@ -1168,105 +1088,301 @@ html:not(.light) .icon-moon {
   border-radius: 4px;
 }
 
-/* ── Freshness Ring — thin, single accent (site-quiet) ── */
-.freshness-ring {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: inset 0 0 0 1px var(--border);
-  font-size: 0.55rem;
-  font-weight: 500;
-  font-family: var(--mono);
-  color: var(--muted);
-  position: relative;
-}
+/* ── Freshness Ring — small, single accent (design 3a strip item) ── */
 
-.freshness-ring::after {
-  content: "";
-  position: absolute;
-  inset: 4px;
-  border-radius: 50%;
-  background: var(--bg2);
-}
 
-.freshness-ring span {
-  position: relative;
-  z-index: 1;
-}
+
 
 /* ────────────────── Dashboard Grid ────────────────── */
+/* .dashboard is now only a padding wrapper; the grid lives on the single .view
+   element whose data-layout comes from the pack (Story 2.4). Layout templates
+   replace the legacy 12-column span system. */
 .dashboard {
-  padding: 20px 24px;
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: 16px;
+  padding-top: 32px;
+  padding-bottom: 30px;
   overflow: hidden;
+}
+
+.view {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.view-col {
+  display: contents;
+}
+
+.view[data-layout="main-rail"] .view-col,
+.view[data-layout="reader"] .view-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.view[data-layout="main-rail"] .view-col--main {
+  grid-column: 1;
+  gap: 32px;
+}
+
+/* The closing band takes the column's slack, so main and rail finish level.
+   `.panel--closing` is set by applyVisibility — CSS has no "last visible"
+   selector and the column wrapper holds every view's panels. */
+.view[data-layout="main-rail"] .view-col--main > .panel--closing,
+.view[data-layout="reader"] .view-col--main > .panel--closing {
+  margin-top: auto;
+}
+
+.view[data-layout="main-rail"] .view-col--rail {
+  grid-column: 2;
+  gap: 26px;
+}
+
+.view[data-layout="reader"] .view-col--main {
+  grid-column: 1;
+  gap: 14px;
+}
+
+.view[data-layout="reader"] .view-col--rail {
+  grid-column: 2;
+  gap: 16px;
+}
+
+.view[data-layout="main-rail"] {
+  grid-template-columns: minmax(0, 1fr) 372px;
+  gap: 30px;
+  align-items: stretch;
+}
+
+.view[data-layout="grid"] {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  align-items: stretch;
+}
+
+.view[data-layout="reader"] {
+  grid-template-columns: minmax(0, 1fr) 420px;
+  gap: 26px;
+  align-items: stretch;
+}
+
+/* Pin main panels to column 1 in rail layouts, otherwise auto-placement fills
+   column 2 with the second main panel before the rail. Scoped to rail layouts
+   so a grid view is unaffected. */
+.view[data-layout="main-rail"] .panel[data-column="main"],
+.view[data-layout="reader"] .panel[data-column="main"] {
+  grid-column: 1;
+}
+
+.view[data-layout="main-rail"] .panel[data-column="rail"],
+.view[data-layout="reader"] .panel[data-column="rail"] {
+  grid-column: 2;
+  margin-bottom: 0;
+}
+
+.panel[data-column="rail"] {
+  grid-column: 2;
+  margin-bottom: 0;
+  /* Right-rail card surface (design 3a): surface tint + 12px radius, no 1px
+     panel border of its own. Scoped to rail panels — the whole panel system is
+     restyled in Epic 6. */
+  background: var(--surface);
+  border: none;
+  border-radius: 12px;
+}
+
+/* A jump from the today directory flags where the reader landed. */
+.panel--jumped {
+  box-shadow: 0 0 0 2px var(--green);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .panel--jumped {
+    transition: box-shadow 0.25s ease;
+  }
+}
+
+/* ── Source cards (design 3b) ── */
+/* Uniform source-grid chrome, scoped to the grid layout so today/editions keep
+   the legacy .panel treatment. Binds only to semantic tokens. */
+.view[data-layout="grid"] .panel.source-card {
+  background: var(--surface);
+  border: none;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.view[data-layout="grid"] .panel.source-card .panel-header {
+  padding: 18px 18px 12px;
+  gap: 12px;
+  border-bottom: 1px solid var(--hairline);
+}
+.view[data-layout="grid"] .panel.source-card .panel-body { padding: 0 18px 18px; }
+.src-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; background: var(--idle); }
+.panel[data-status="ok"] .src-dot { background: var(--green); }
+.panel[data-status="slow"] .src-dot,
+.panel[data-status="error"] .src-dot { background: var(--amber-dot); }
+.panel[data-status="idle"] .src-dot { background: var(--idle); }
+.view[data-layout="grid"] .panel.source-card .panel-title {
+  flex: 1; min-width: 0;
+  font-family: var(--mono); font-size: 12.5px; color: var(--ink-2);
+  /* design 3b names the source in lowercase, not the rail label treatment */
+  text-transform: lowercase; letter-spacing: 0;
+}
+/* The title grows, so `count · last-fetch age` sits flush right (AC2/design 3b);
+   the collapse chevron (Story 4.5) trails it at the far edge. */
+.view[data-layout="grid"] .panel.source-card .panel-count {
+  margin-left: auto; flex-shrink: 0;
+  background: none; padding: 0; font-family: var(--mono); font-size: 11px; color: var(--ink-4);
+}
+.view[data-layout="grid"] .panel.source-card .panel-count.slow { color: var(--amber-ink); }
+.view[data-layout="grid"] .panel.source-card .news-title,
+.view[data-layout="grid"] .panel.source-card .news-title a { font-family: var(--font); font-size: 14px; line-height: 1.4; color: var(--ink); }
+.view[data-layout="grid"] .panel.source-card .news-meta { font-family: var(--mono); font-size: 11px; color: var(--ink-4); }
+/* One metadata line only, and a two-line title cap, so every source card is
+   the same height and the grid reads as one system (design 3b). */
+.view[data-layout="grid"] .panel.source-card .news-meta ~ .news-meta { display: none; }
+.view[data-layout="grid"] .panel.source-card .news-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.view[data-layout="grid"] .panel.source-card .repo-name a,
+.view[data-layout="grid"] .panel.source-card .model-name a { font-family: var(--mono); font-size: 12.5px; color: var(--green-ink); }
+
+/* ── Source-health tile (design 3b) ── */
+/* Documented exception: the `data-panel-id` here is the pack panel id (chrome),
+   not a view id or source name — it binds the inset tile treatment to the tile. */
+.panel[data-panel-id="source-health"] { background: var(--inset); border: none; border-radius: 12px; }
+.panel[data-panel-id="source-health"] .panel-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.health-rows { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.health-row { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); }
+.health-row .src-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--idle); }
+.health-row[data-state="ok"] .src-dot   { background: var(--green); }
+.health-row[data-state="slow"] .src-dot,
+.health-row[data-state="error"] .src-dot { background: var(--amber-dot); }
+.health-cells { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; margin-top: 12px; }
+.health-cell { height: 18px; border-radius: 3px; background: var(--idle); }
+.health-cell[data-state="ok"]      { background: var(--green); }
+.health-cell[data-state="running"] { background: var(--green-soft); }
+.health-cell[data-state="slow"], .health-cell[data-state="error"] { background: var(--amber-dot); }
+.health-next { margin-top: 10px; font-family: var(--mono); font-size: 11.5px; color: var(--ink-4); }
+
+/* ── Filter bar (design 3b) ── */
+.view-toolbar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--strip);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.filter-chip {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-3);
+  background: var(--inset);
+  border: none;
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+.filter-chip.active { background: var(--ink); color: var(--paper); }
+.filter-chip:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+.view-toolbar .sort { margin-left: auto; font-family: var(--mono); font-size: 11.5px; color: var(--ink-4); }
+.health-tally { font-family: var(--mono); font-size: 12.5px; color: var(--green-ink); }
+.health-tally:empty { display: none; }
+.view-toolbar select {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  background: var(--inset);
+  color: var(--ink-2);
+  border: none;
+  border-radius: 6px;
+  padding: 4px 8px;
 }
 
 /* ── Panel ── */
 .panel {
   position: relative;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: var(--surface);
+  border: none;
+  border-radius: 12px;
   overflow: hidden;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  transition:
-    border-color 0.2s,
-    box-shadow 0.3s,
-    transform 0.2s;
+  box-shadow: 0 1px 2px rgba(29, 27, 25, 0.05);
+  transition: box-shadow 0.2s;
 }
 
-/* dendievel.me project-card signature: green left accent bar on hover */
-.panel::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 3px;
-  height: 0;
-  background: var(--accent2);
-  transition: height 0.25s ease;
-  z-index: 2;
-}
-.panel:hover::before {
-  height: 100%;
-}
+/* Hover raises the card one step (design: "cards raise shadow"); no border
+   colour change and no accent bar — the flat-surface system carries no 1px
+   panel edges at all. */
 .panel:hover {
-  border-color: rgba(32, 228, 103, 0.45);
-  box-shadow: var(--glow);
+  box-shadow: 0 2px 4px rgba(29, 27, 25, 0.08);
 }
 
-.panel:hover {
-  border-color: var(--border2);
-  box-shadow: var(--glow);
+/* Bands that carry no card of their own (design 3a briefing / streams preview,
+   3c reader): the body supplies its own surface where it needs one. */
+.panel--bare,
+.panel--bare:hover {
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+  overflow: visible;
 }
 
 .panel-header {
-  padding: 13px 18px 11px;
-  border-bottom: 1px solid var(--border);
+  padding: 20px 20px 0;
   display: flex;
-  align-items: center;
-  gap: 12px;
+  /* baseline, not center: a right-hand meta that wraps to two lines must not
+     drag the label off the first line with it. */
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px 12px;
   cursor: pointer;
   user-select: none;
+}
+
+.panel--bare > .panel-header {
+  padding: 0 0 12px;
+}
+
+.panel--bare > .panel-body {
+  padding: 0 0 4px;
 }
 
 /* Pin the chevron-toggle to the right edge so the count (middle flex item)
    stays snug next to the title instead of floating when the header is wider
    than the title + count combined. */
 .panel-toggle {
+  /* A real button since Story 6.8 (keyboard-reachable per-panel collapse); the
+     reset keeps the chevron visually identical to the old <span>. */
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
   font-size: 0.65rem;
-  color: var(--muted);
-  margin-left: auto;
-  transition: transform 0.25s ease;
+  color: var(--ink-4);
+  cursor: pointer;
+  margin-left: 8px;
+  opacity: 0;
+  transition:
+    transform 0.25s ease,
+    opacity 0.15s ease;
   display: inline-block;
+}
+
+.panel:hover > .panel-header > .panel-toggle,
+.panel:focus-within > .panel-header > .panel-toggle,
+.panel.collapsed > .panel-header > .panel-toggle {
+  opacity: 1;
 }
 
 .collapse-all-btn {
@@ -1306,36 +1422,53 @@ html:not(.light) .icon-moon {
 }
 
 .panel-title {
-  font-size: 0.85rem;
-  font-family: var(--font);
-  color: var(--text);
-  font-weight: 600;
-  letter-spacing: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-4);
   display: flex;
   align-items: center;
   gap: 6px;
+  flex: none;
+  white-space: nowrap;
 }
 
-/* Site language has no iconography in card titles */
-.panel-icon {
-  display: none;
-}
-
+/* Icon sprite ships (Story 6.6): card-title glyphs render from the sprite,
+   coloured by the semantic token so all three themes swap together. */
 .panel-count {
-  font-size: 0.66rem;
-  color: var(--muted);
+  margin-left: auto;
+  min-width: 0;
   font-family: var(--mono);
-  background: var(--bg3);
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--ink-4);
+  background: none;
+  padding: 0;
+  text-align: right;
+  /* Never break a meta phrase across lines; wrap the whole item instead. */
+  white-space: nowrap;
 }
+
+/* Delta `N new` pill (Story 6.5): a header pill that reserves no extra row, so
+   the panel body never shifts when arrivals land. */
+.delta-badge { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; padding: 2px 8px; border-radius: 999px; background: var(--green-tint); color: var(--green-ink); font-family: var(--mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; border: none; cursor: pointer; }
+.delta-badge:hover { background: var(--green-soft); }
+.delta-badge:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
 
 .panel-body {
   padding: 8px 18px 16px;
   flex: 1;
+  min-height: 0;
+}
+
+/* Opt-in internal scroll (design 3b): only a body with >=6 rendered rows is
+   capped and scrollable, so short panels size to content and the page stays
+   compact without dead scroll space. */
+.panel-body--scroll {
+  max-height: 320px;
   overflow-y: auto;
-  max-height: 460px;
 }
 
 .panel-body::-webkit-scrollbar {
@@ -1347,23 +1480,6 @@ html:not(.light) .icon-moon {
 .panel-body::-webkit-scrollbar-thumb {
   background: var(--border2);
   border-radius: 4px;
-}
-
-/* Panel column sizes */
-.col-3 {
-  grid-column: span 3;
-}
-.col-4 {
-  grid-column: span 4;
-}
-.col-6 {
-  grid-column: span 6;
-}
-.col-8 {
-  grid-column: span 8;
-}
-.col-12 {
-  grid-column: span 12;
 }
 
 /* ── Fade-in animation ── */
@@ -1615,40 +1731,228 @@ html:not(.light) .icon-moon {
   color: var(--amber);
 }
 
-/* ────────────────── Analysis Panel ────────────────── */
+/* ────────────────── Briefing Panel ────────────────── */
+/* Shared suppression for frames with nothing to show (briefing/radar when no
+ * analysis). Reversible via classList.toggle; never inline display (setView is
+ * the visibility authority). */
+.panel.panel-absent {
+  display: none;
+}
+
+/* The single quiet no-LLM note on the fallback landing view. Spans the whole
+   grid so it sits above the main/rail split and renders exactly once. */
+.briefing-note {
+  grid-column: 1 / -1;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-4);
+  padding: 12px 14px;
+  background: var(--inset);
+  border-radius: 10px;
+}
+
+.briefing-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+}
+
+.briefing-label {
+  color: var(--green-ink);
+}
+
+.briefing-by {
+  color: var(--ink-4);
+}
+
 .analysis-summary {
-  font-size: 0.85rem;
-  line-height: 1.7;
-  color: var(--text2);
-  margin-bottom: 16px;
-  padding: 14px 16px;
-  background: var(--bg3);
-  border-radius: var(--radius-sm);
-  border-left: 3px solid var(--accent);
+  /* The day's title: the biggest thing on the screen, so the eye lands here
+     before the story list. */
+  font-family: var(--font);
+  font-size: 30px;
+  line-height: 1.2;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-wrap: pretty;
+  margin: 12px 0 0;
+  /* Guard: the prompt asks for one sentence, but a model that runs long must
+     not push the headlines off the page. */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.analysis-story {
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border);
+.story-row {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) 96px;
+  gap: 16px;
+  align-items: baseline;
+  padding: 12px 8px;
+  margin: 0 -8px;
+  border-bottom: 1px solid var(--hairline);
+  border-radius: 6px;
+  transition: background 0.15s;
 }
 
-.analysis-story:last-child {
+/* "Hover: story rows lift to --surface background" */
+.story-row:hover {
+  background: var(--surface);
+}
+
+.story-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.story-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.story-chips:empty {
+  display: none;
+}
+
+/* The ranked continuation under the model's picks: one line each, so volume
+   reads as a list rather than more blocks. */
+.more-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.more-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: baseline;
+  padding: 9px 8px;
+  margin: 0 -8px;
+  border-radius: 6px;
+  border-bottom: 1px solid var(--hairline);
+  transition: background 0.15s;
+}
+
+/* `display: grid` above outranks the UA's [hidden] rule, so hiding a trimmed
+   row needs saying explicitly — without this the fit ran and changed nothing. */
+.more-row[hidden] {
+  display: none;
+}
+
+.more-row:last-child,
+.more-row:not([hidden]):last-of-type {
   border-bottom: none;
 }
 
-.analysis-headline {
-  font-size: 0.82rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.more-row:hover {
+  background: var(--surface);
 }
 
-.analysis-significance {
-  font-size: 0.72rem;
-  color: var(--muted);
-  margin-top: 3px;
+.more-title {
+  font-size: 14.5px;
   line-height: 1.4;
+  color: var(--ink);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.more-title a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.more-row:hover .more-title a {
+  color: var(--green-ink);
+}
+
+.more-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: lowercase;
+  white-space: nowrap;
+  color: var(--ink-4);
+}
+
+.story-meta {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  text-align: right;
+  /* UI chrome is lowercase (the signature); source names arrive capitalised. */
+  text-transform: lowercase;
+  color: var(--ink-4);
+}
+
+.story-row:last-child {
+  border-bottom: none;
+}
+
+.story-rank {
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--green);
+}
+
+.story-rank--dim {
+  color: var(--green-soft);
+}
+
+.story-headline {
+  font-family: var(--font);
+  font-size: 17.5px;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.story-why {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-3);
+  text-wrap: pretty;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Hovering a row is a signal of interest: give it the full sentence. */
+.story-row:hover .story-why {
+  -webkit-line-clamp: 3;
+}
+
+.chip {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.chip-category {
+  background: var(--green-tint-2);
+  color: var(--green-ink);
+}
+
+.chip-impact {
+  background: var(--amber-tint);
+  color: var(--amber-ink);
+}
+
+.chip-rumor {
+  background: var(--inset);
+  color: var(--ink-4);
 }
 
 .impact-badge {
@@ -1698,253 +2002,553 @@ html:not(.light) .icon-moon {
 }
 
 .trend-item {
-  display: inline-block;
-  padding: 6px 14px;
-  margin: 3px;
-  border-radius: 20px;
-  font-size: 0.72rem;
-  background: rgba(32, 228, 103, 0.08);
-  color: var(--accent2);
-  border: 1px solid rgba(32, 228, 103, 0.15);
-  font-weight: 500;
-  transition: all 0.2s;
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-2);
 }
 
-.trend-item:hover {
-  background: rgba(32, 228, 103, 0.15);
-  border-color: rgba(32, 228, 103, 0.3);
+.trend-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.trend-item:hover .trend-text {
+  -webkit-line-clamp: 3;
+}
+
+.trend-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--green);
 }
 
 .section-label {
-  font-size: 0.65rem;
-  color: var(--accent2);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--ink-4);
   text-transform: uppercase;
-  letter-spacing: 1.5px;
-  margin: 8px 0 10px;
-  font-weight: 600;
+  letter-spacing: 0.16em;
+  margin: 20px 0 10px;
+}
+
+.briefing-head + .section-label {
+  margin-top: 14px;
 }
 
 /* ────────────────── Radar & Signals ────────────────── */
-.radar-card {
-  padding: 10px 12px;
-  margin-bottom: 8px;
-  border-radius: var(--radius-sm);
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  transition: border-color 0.2s;
+/* Rail rows: 8px dot | 1fr | tag, hairline-separated (design 3a). Status
+ * colours come from [data-status] so the markup carries no inline style. */
+.radar-row {
+  display: grid;
+  grid-template-columns: 8px 1fr auto;
+  gap: 12px;
+  align-items: start;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--hairline);
 }
 
-.radar-card:hover {
-  border-color: var(--border2);
+.radar-row:last-child {
+  border-bottom: none;
 }
 
-.radar-status {
+.radar-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  flex-shrink: 0;
+  margin-top: 5px;
+  background: var(--amber-dot);
+}
+
+[data-status="released"] .radar-dot {
+  background: var(--green);
+}
+
+[data-status="in-development"] .radar-dot {
+  background: var(--green-soft);
 }
 
 .radar-info {
-  flex: 1;
   min-width: 0;
 }
 
 .radar-name {
-  font-size: 0.8rem;
+  font-family: var(--font);
+  font-size: 15px;
   font-weight: 600;
+  color: var(--ink);
 }
 
 .radar-name a {
-  color: var(--text);
+  color: var(--green-ink);
   transition: color 0.15s;
 }
 
 .radar-name a:hover {
-  color: var(--accent2);
+  color: var(--green);
 }
 
 .radar-org {
-  font-size: 0.65rem;
-  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--ink-4);
 }
 
 .radar-note {
-  font-size: 0.65rem;
-  color: var(--dim);
-  margin-top: 2px;
+  font-size: 13.5px;
+  color: var(--ink-3);
 }
 
-.radar-status-label {
-  font-size: 0.55rem;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-weight: 700;
+.radar-tag {
+  font-family: var(--mono);
+  font-size: 10.5px;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
-  flex-shrink: 0;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+[data-status="released"] .radar-tag {
+  background: var(--green-tint);
+  color: var(--green-ink);
+}
+
+[data-status="announced"] .radar-tag {
+  background: var(--amber-tint);
+  color: var(--amber-ink);
+}
+
+[data-status="rumored"] .radar-tag {
+  background: var(--inset);
+  color: var(--ink-4);
+}
+
+[data-status="in-development"] .radar-tag {
+  background: var(--green-tint-2);
+  color: var(--green-ink);
 }
 
 .signal-item {
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border);
-  font-size: 0.78rem;
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--hairline);
 }
 
 .signal-item:last-child {
   border-bottom: none;
 }
 
-.signal-conf {
-  font-size: 0.55rem;
-  font-family: var(--mono);
-  padding: 2px 8px;
-  border-radius: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 700;
-  flex-shrink: 0;
-  margin-top: 1px;
+.signal-statement {
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-2);
 }
 
-.conf-high {
-  background: rgba(52, 211, 153, 0.12);
-  color: var(--green);
-}
-.conf-medium {
-  background: rgba(251, 191, 36, 0.12);
-  color: var(--amber);
-}
-.conf-low {
-  background: rgba(148, 163, 184, 0.1);
-  color: var(--muted);
-}
-
-.signal-text {
-  flex: 1;
-}
-
-.signal-text a {
-  color: var(--text2);
-}
-
-.signal-text a:hover {
-  color: var(--accent2);
-}
-
-.signal-source {
-  font-size: 0.62rem;
-  color: var(--dim);
-  display: block;
-  margin-top: 2px;
-}
-
-/* ────────────────── Source Status ────────────────── */
-.source-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 8px;
-}
-
-.source-chip {
-  padding: 8px 10px;
-  border-radius: var(--radius-sm);
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  font-size: 0.72rem;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: border-color 0.2s;
-}
-
-.source-chip:hover {
-  border-color: var(--border2);
-}
-
-.source-chip .dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.source-chip .dot.ok {
-  background: var(--green);
-  box-shadow: 0 0 6px rgba(52, 211, 153, 0.4);
-}
-
-.source-chip .dot.err {
-  background: var(--red);
-  box-shadow: 0 0 6px rgba(248, 113, 113, 0.4);
-}
-
-/* ── Source Modal ── */
-.source-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(8px);
-  z-index: 200;
-  display: none;
-  align-items: center;
-  justify-content: center;
-}
-
-.source-modal-overlay.open {
-  display: flex;
-}
-
-.source-modal {
-  background: var(--bg2);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius);
-  padding: 24px 28px;
-  min-width: 360px;
-  max-width: 500px;
-  box-shadow: var(--shadow-lg);
-  animation: command-enter 0.15s ease;
-}
-
-.source-modal h3 {
-  font-size: 0.82rem;
-  color: var(--text2);
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  margin-bottom: 16px;
-  font-weight: 600;
-}
-
-.source-modal-close {
-  float: right;
-  background: none;
-  border: none;
-  color: var(--muted);
-  font-size: 1.3rem;
-  cursor: pointer;
-  padding: 0 4px;
+.signal-statement a {
+  color: var(--green-ink);
   transition: color 0.15s;
 }
 
-.source-modal-close:hover {
-  color: var(--text);
+.signal-statement a:hover {
+  color: var(--green);
+}
+
+.signal-meta {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  margin-top: 4px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+}
+
+.signal-source {
+  color: var(--ink-4);
+}
+
+.signal-confidence {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.signal-confidence.high {
+  color: var(--amber-ink);
+}
+
+.signal-confidence.medium {
+  color: var(--ink-3);
+}
+
+.signal-confidence.low {
+  color: var(--ink-4);
+}
+
+/* ────────────────── Editions Card ────────────────── */
+/* today rail (design 3a): --green-tint surface with two --surface rows. The
+ * weekly row carries the next-run time and derived state only; the
+ * accumulating-draft progress UI is deferred. */
+/* Design 3a: the panel itself is the green-tint card; the rows sit on the
+   lighter well inside it. The card element is just the stack. */
+.panel--green,
+.panel--green:hover {
+  background: var(--green-tint);
+}
+
+.panel--green .panel-title,
+.panel--green .panel-count {
+  color: var(--green-ink);
+}
+
+.edition-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.edition-row {
+  background: var(--surface);
+  border-radius: 9px;
+  padding: 13px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.edition-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.edition-title {
+  font-family: var(--font);
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.edition-title:empty {
+  display: none;
+}
+
+.edition-when {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+
+/* Primary action on the card: a green pill (design 3a `read`). */
+.edition-btn {
+  flex: none;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 7px 12px;
+  border: none;
+  border-radius: 999px;
+  background: var(--green);
+  color: var(--surface);
+  cursor: pointer;
+}
+
+.edition-btn:hover {
+  background: var(--green-ink);
+}
+
+.edition-btn:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+.edition-state {
+  flex: none;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--ink-4);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.edition-row--empty .edition-when {
+  color: var(--ink-4);
+}
+
+/* Shared text-link control (reused by Story 3.5). */
+.view-link {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--green-ink);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.view-link:hover {
+  color: var(--green);
+  text-decoration: underline;
+}
+
+.panel-count.view-link {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 12px;
+  color: var(--green-ink);
+}
+
+/* ────────────────── Daily edition reader ────────────────── */
+/* Main-column document (design 3c): --surface card with no 1px border of its
+   own — separation is surface tint + hairline. The reader grows the page; it
+   never opts into `.panel-body--scroll`. */
+.edition-reader {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 30px 32px 34px;
+}
+.edition-masthead {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.edition-wordmark {
+  font-family: var(--mono);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.edition-wordmark-green {
+  color: var(--green);
+}
+.edition-sub {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--ink-4);
+}
+.edition-reader .hairline {
+  border: none;
+  border-top: 1px solid var(--hairline);
+  margin: 18px 0;
+}
+.edition-lede {
+  font-family: var(--font);
+  font-size: 20px;
+  line-height: 1.46;
+  letter-spacing: -0.008em;
+  color: var(--ink-2);
+}
+.edition-section-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--ink-4);
+  margin: 22px 0 6px;
+}
+.edition-stories {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.edition-story {
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 12px;
+  padding: 14px 0;
+  border-top: 1px solid var(--hairline);
+}
+.edition-rank {
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--green);
+}
+.edition-headline {
+  font-family: var(--font);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+}
+.edition-summary {
+  font-family: var(--font);
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--ink-3);
+  margin: 4px 0 0;
+}
+.edition-chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.edition-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px solid var(--hairline);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--ink-4);
+}
+.edition-browser-link {
+  color: var(--green-ink);
+  text-decoration: none;
+}
+.edition-browser-link:hover {
+  color: var(--green);
+  text-decoration: underline;
+}
+.edition-share {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--green-ink);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.edition-share:hover {
+  color: var(--green);
+  text-decoration: underline;
+}
+
+/* ────────────────── Archive card ────────────────── */
+/* Reader main-column list (design 3c): hairline-separated rows only — no 1px
+   panel border. Daily rows link to the retained /newsletter page; the weekly
+   row scrolls the weekly panel into view. */
+.archive-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.archive-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--hairline);
+}
+
+.archive-row:first-child {
+  border-top: none;
+}
+
+.archive-link {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--green-ink);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: none;
+}
+
+.archive-link:hover {
+  color: var(--green);
+  text-decoration: underline;
+}
+
+.archive-meta {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--ink-4);
+}
+
+/* Sources preview (main column): up to four source cards in a 2×2 grid. */
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+
+.preview-card {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  background: var(--surface);
+  border: none;
+  border-radius: 10px;
+  padding: 13px 14px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--ink-2);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.preview-card:hover {
+  background: var(--inset);
+  color: var(--ink);
+}
+
+.preview-source {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preview-count {
+  flex: none;
+  color: var(--green-ink);
+}
+
+.panel-empty {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-4);
+  padding: 14px 2px;
 }
 
 /* ────────────────── Footer ────────────────── */
 .footer {
-  padding: 20px 24px;
-  text-align: center;
-  font-size: 0.72rem;
-  color: var(--dim);
-  border-top: 1px solid var(--border);
-  background: var(--bg2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding-top: 16px;
+  padding-bottom: 16px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-4);
+  border-top: none;
+  background: var(--surface);
   margin-top: 8px;
+}
+
+/* Shortcut discovery lives here (design 3a), which is why the header carries
+   no help or collapse-all button. */
+.footer-keys {
+  margin-left: auto;
+}
+
+@media (max-width: 900px) {
+  .footer-keys {
+    display: none;
+  }
 }
 
 .footer strong {
@@ -1959,16 +2563,6 @@ html:not(.light) .icon-moon {
 
 /* ────────────────── Responsive ────────────────── */
 @media (max-width: 1200px) {
-  .col-3 {
-    grid-column: span 4;
-  }
-  .col-4 {
-    grid-column: span 6;
-  }
-  .col-8 {
-    grid-column: span 12;
-  }
-
   .search-trigger {
     min-width: 140px;
   }
@@ -1976,114 +2570,13 @@ html:not(.light) .icon-moon {
   .search-trigger span {
     display: none;
   }
-}
 
-@media (max-width: 768px) {
-  .col-3,
-  .col-4,
-  .col-6,
-  .col-8,
-  .col-12 {
-    grid-column: span 12;
+  .header-link {
+    padding: 6px 10px;
   }
 
-  /* System B: reset --col-span so the custom-property-driven grid also stacks */
-  .panel[class*="col-"] {
-    --col-span: 12;
-  }
-
-  .dashboard {
-    padding: 12px;
-    gap: 12px;
-  }
-
-  .header {
-    padding: 0 12px;
-    position: relative;
-  }
-
-  .hamburger {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    order: -1;
-  }
-
-  .header-left {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .header-nav {
+  .header-link span {
     display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    flex-direction: column;
-    background: var(--bg2);
-    border-bottom: 1px solid var(--border);
-    padding: 8px 12px;
-    gap: 4px;
-    z-index: 99;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-  }
-
-  .header-nav.open {
-    display: flex;
-  }
-
-  .header-nav .nav-pill {
-    width: 100%;
-    text-align: left;
-    padding: 10px 16px;
-    font-size: 0.85rem;
-    border-radius: var(--radius-sm);
-  }
-
-  .header-nav .mobile-menu-extras {
-    display: flex;
-    gap: 8px;
-    padding: 8px 4px;
-    border-top: 1px solid var(--border);
-    margin-top: 4px;
-  }
-
-  .header-nav .mobile-menu-extras .search-trigger {
-    flex: 1;
-    min-width: unset;
-    justify-content: center;
-  }
-
-  .header-nav .mobile-menu-extras .search-trigger span,
-  .header-nav .mobile-menu-extras .search-trigger kbd {
-    display: none;
-  }
-
-  .header-right .search-trigger,
-  .header-right .theme-toggle {
-    display: none;
-  }
-
-  .stats-bar {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 12px;
-    gap: 8px;
-  }
-
-  .stat-card {
-    flex: 0 0 auto;
-    min-width: 140px;
-  }
-
-  .status-badge {
-    font-size: 0.6rem;
-    padding: 4px 10px;
-  }
-
-  .footer {
-    padding: 16px;
   }
 }
 
@@ -2103,18 +2596,22 @@ html:not(.light) .icon-moon {
   font-family: "JetBrains Mono", monospace;
 }
 
-.digest-body {
-  max-height: none;
-}
+/* The digest body previously opted out of the old blanket `.panel-body`
+   max-height with a `.digest-body` override of max-height: none. The cap is
+   now opt-in (`.panel-body--scroll`, applied by renderDigest only at >=6
+   rendered rows), so that override is obsolete and would silently defeat the
+   cap. */
 
+/* The once-per-week guard is a state, not an error: the note is a quiet mono
+   well, distinct from the transient failure notice's tonal treatment. */
 .digest-notice {
-  background: rgba(251, 191, 36, 0.12);
-  color: var(--amber);
-  border: 1px solid rgba(251, 191, 36, 0.25);
-  border-radius: var(--radius-sm);
-  padding: 10px 16px;
-  font-size: 0.82rem;
-  margin-bottom: 12px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--ink-3);
+  background: #f7fbf7;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
   animation: digest-notice-in 0.3s ease;
 }
 
@@ -2129,6 +2626,24 @@ html:not(.light) .icon-moon {
   }
 }
 
+/* Weekly card surface (design 3c): the digest body is the --green-tint r12
+   card. `[data-panel-id="digest"]` is a pack panel id, the same exception
+   Story 4.4 used for `source-health`. */
+.panel[data-panel-id="digest"] .digest-body {
+  background: var(--green-tint);
+  border-radius: 12px;
+  padding: 22px;
+}
+
+.digest-week {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--green-ink);
+}
+
 .digest-empty {
   display: flex;
   flex-direction: column;
@@ -2139,20 +2654,18 @@ html:not(.light) .icon-moon {
 }
 
 .digest-generate-btn {
-  background: var(--accent);
-  color: #fff;
+  background: var(--surface);
+  color: var(--ink-2);
   border: none;
-  padding: 10px 24px;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 12px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: color 0.2s;
 }
 .digest-generate-btn:hover {
-  background: var(--accent);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(32, 228, 103, 0.4);
+  color: var(--ink);
 }
 .digest-generate-btn:disabled {
   opacity: 0.7;
@@ -2198,14 +2711,13 @@ html:not(.light) .icon-moon {
 }
 
 .digest-tldr {
-  background: rgba(32, 228, 103, 0.08);
-  border-left: 3px solid var(--accent);
-  padding: 16px 20px;
-  border-radius: 0 8px 8px 0;
-  margin-bottom: 20px;
-  font-size: 0.95rem;
-  line-height: 1.7;
-  color: var(--text);
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink-2);
 }
 
 .digest-section-title {
@@ -2410,18 +2922,28 @@ html:not(.light) .icon-moon {
           Extra Breakpoints, CSS-only Ticker, Grid Utilities
    ═══════════════════════════════════════════════════════════ */
 
-/* ── Accessibility: visible focus ring for keyboard users ── */
-:focus-visible {
-  outline: 2px solid var(--accent);
+/* ── Accessibility: visible focus ring for keyboard users ──
+   A single ring bound to --green (design-reference §3), applied to every
+   focusable element. `:where()` keeps the element rule at zero specificity so
+   a component can still add spacing, while the explicit class list below
+   guarantees the ring where an older rule cleared the outline. */
+:where(a, button, select, input, [tabindex], [role="button"]):focus-visible {
+  outline: 2px solid var(--green);
   outline-offset: 2px;
-  border-radius: var(--radius-xs);
+  border-radius: 4px;
 }
-button:focus-visible,
-a:focus-visible,
-input:focus-visible,
-[role="button"]:focus-visible {
-  outline: 2px solid var(--accent);
+.nav-pill:focus-visible,
+.search-trigger:focus-visible,
+.panel-toggle:focus-visible,
+.filter-chip:focus-visible,
+.delta-badge:focus-visible,
+.archive-link:focus-visible,
+.digest-link:focus-visible,
+.digest-expand:focus-visible,
+.view-link:focus-visible {
+  outline: 2px solid var(--green);
   outline-offset: 2px;
+  border-radius: 4px;
 }
 /* Screen reader only */
 .sr-only {
@@ -2537,10 +3059,18 @@ input:focus-visible,
   }
   .ticker-inner {
     animation: none !important;
+    transform: none;
+    white-space: normal;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
   }
-  .loading-orb,
-  .loading-bar-inner,
-  .fade-in {
+  /* Every animated component is named explicitly: status is conveyed by the
+     pill's text/colour and the ticker's static list, never by motion. */
+  .fade-in,
+  .panel.is-loading .panel-body::after,
+  .panel:not(.is-loading) .panel-body > *,
+  .status-dot[data-state="connected"] {
     animation: none !important;
   }
 }
@@ -2555,111 +3085,238 @@ html.light .theme-toggle .icon-moon {
   display: inline-block;
 }
 
-/* ── Panel count: dim the "—" empty state ── */
+/* Auto mode: a distinct half-filled circle, hiding both sun and moon. Declared
+   after the swap above so it wins the equal-specificity cascade. */
+.theme-toggle .icon-auto {
+  display: none;
+}
+html[data-theme-mode="auto"] .theme-toggle .icon-sun,
+html[data-theme-mode="auto"] .theme-toggle .icon-moon {
+  display: none;
+}
+html[data-theme-mode="auto"] .theme-toggle .icon-auto {
+  display: inline-block;
+}
+
+/* An empty count renders nothing. The old "—" placeholder read as a stray dash
+   beside bare labels (e.g. the edition reader's header row). */
 .panel-count {
   transition: color 0.2s;
 }
-.panel-count:empty::before {
-  content: "—";
-  color: var(--dim);
+.panel-count:empty {
+  display: none;
 }
 
-/* ── Grid utility (alongside legacy col-N classes) ── */
-.panel[class*="col-"] { grid-column: span var(--col-span, 12); }
-.panel.col-1  { --col-span: 1; }
-.panel.col-2  { --col-span: 2; }
-.panel.col-3  { --col-span: 3; }
-.panel.col-4  { --col-span: 4; }
-.panel.col-5  { --col-span: 5; }
-.panel.col-6  { --col-span: 6; }
-.panel.col-7  { --col-span: 7; }
-.panel.col-8  { --col-span: 8; }
-.panel.col-9  { --col-span: 9; }
-.panel.col-10 { --col-span: 10; }
-.panel.col-11 { --col-span: 11; }
-.panel.col-12 { --col-span: 12; }
-
-/* ── Extra responsive breakpoint: tablet / 13" laptop ── */
-@media (max-width: 1024px) {
-  .panel.col-4 { --col-span: 6; }
-  .panel.col-8 { --col-span: 12; }
-  .stats-bar { grid-template-columns: repeat(3, 1fr); }
-  .header-nav { display: none; }
-}
-
-/* ── Tab-specific layout overrides — DESKTOP ONLY. Scoped to min-width:769px
-   so they don't fight the mobile override (which is a less-specific rule at
-   max-width:768px that needs to win unopposed there). The "All" view is
-   untouched at every width. ── */
-@media (min-width: 769px) {
-  /* Code tab: GitHub Trending is the only visible panel — let it span full
-     width instead of sitting at col-6 with half the row empty. */
-  .dashboard[data-filter="code"] .panel[data-section="code"] {
-    --col-span: 12;
+/* ── View layout responsive contract (Story 2.4) ──
+   ≥1200px: the specced templates above.
+   900–1199px: the rail drops below the main column, streams becomes 2 columns.
+   <900px: single column, 2×2 metrics, bottom segmented nav, single-line ticker. */
+@media (max-width: 1199px) {
+  .view[data-layout="main-rail"],
+  .view[data-layout="reader"] {
+    grid-template-columns: minmax(0, 1fr);
   }
-  /* Community tab: four panels laid out as a tidy 2×2 grid. Simon Willison
-     is col-6 by default; the other three community panels are col-4.
-     Promote all four to col-6 when Community is the active filter. */
-  .dashboard[data-filter="community"] .panel[data-section="community"] {
-    --col-span: 6;
+  .view[data-layout="grid"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .view[data-layout="main-rail"] .view-col,
+  .view[data-layout="reader"] .view-col {
+    grid-column: 1;
+  }
+  .preview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-/* ── Mobile override: full-width panels (must come AFTER the unconditional
-   .panel.col-X rules above, otherwise equal specificity + earlier source-order
-   loses, leaving e.g. .panel.col-6 at --col-span: 6 on mobile) ── */
-@media (max-width: 768px) {
-  .panel[class*="col-"] { --col-span: 12; }
-  .stats-bar { grid-template-columns: 1fr; }
+@media (max-width: 899px) {
+  .view[data-layout="main-rail"],
+  .view[data-layout="grid"],
+  .view[data-layout="reader"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .view[data-layout="main-rail"] .view-col,
+  .view[data-layout="reader"] .view-col {
+    grid-column: 1;
+  }
+  .preview-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dashboard {
+    padding: 12px;
+  }
+  .header {
+    padding: 0 12px;
+  }
+  .footer {
+    padding: 16px;
+    /* The bottom nav is fixed; reserve its height (44px pill + padding) plus the
+       safe-area inset so the last row is reachable instead of covered. */
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
 
+  /* The `│` separator only makes sense in the single desktop row; in the 2×2
+     grid it would dangle at the start of every cell after the first. */
+
+  .header-nav {
+    display: none;
+  }
+  .bottom-nav {
+    display: flex;
+  }
+  .ticker-inner {
+    white-space: nowrap;
+  }
+  /* 44×44 touch targets (design-reference §3: every interactive control) */
+  .panel-toggle,
+  .nav-pill,
+  .search-trigger,
+  .theme-toggle,
+  .collapse-all-btn,
+  .header-link {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  /* Filter chips and delta badges stay tappable on touch viewports
+     (Story 6.8 audit). */
+  .filter-chip,
+  .delta-badge {
+    min-height: 44px;
+    min-width: 44px;
+  }
   /* Keyboard shortcuts button is useless without a physical keyboard and
-     overlaps the AIPULSE logo on narrow viewports — hide on mobile. */
-  .kbd-help-btn { display: none; }
-
+     overlaps the wordmark on narrow viewports — hide on mobile. */
+  .kbd-help-btn {
+    display: none;
+  }
   /* ⌘K kbd hint in the search trigger is also meaningless on touch. */
-  .search-trigger kbd { display: none; }
+  .search-trigger kbd {
+    display: none;
+  }
 }
 
-/* Ticker: keep original 300s scroll-left animation (see line 1038).
-   Pause on hover of the whole ticker, not just inner. */
+@media (min-width: 900px) {
+  .bottom-nav {
+    display: none;
+  }
+}
+
+/* Ticker: continuous ticker-scroll marquee at a constant reading speed (see
+   the keyframes above; app.js sets --ticker-duration from the track width).
+   Pause on hover of the whole ticker, label included. */
 .ticker:hover .ticker-inner {
   animation-play-state: paused;
 }
 
-/* Big screens: let panel bodies breathe — taller than the 460px default */
+/* The rail card is a summary (design 3c): label row, TLDR, one link out and
+   the regenerate control. The document itself lives at /digest. */
+.digest-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.digest-link {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--green-ink);
+  text-decoration: none;
+}
+
+.digest-link:hover {
+  color: var(--green);
+  text-decoration: underline;
+}
+
+.digest-expand {
+  align-self: flex-start;
+  margin-top: 14px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--green-ink);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.digest-expand:hover {
+  color: var(--green);
+  text-decoration: underline;
+}
+
+/* Documents are never capped: a digest or edition body scrolls the page, not a
+   320px well inside the card. */
+.digest-body.panel-body--scroll {
+  max-height: none;
+  overflow: visible;
+}
+
+/* Big screens: let scrolling panel bodies breathe — taller than the 320px
+   default. Scoped to the opt-in class so short panels are untouched. */
 @media (min-width: 1600px) {
-  .panel-body {
+  .panel-body--scroll {
     max-height: 640px;
   }
 }
 
 /* ── Terminal theme (amber on black, Bloomberg-style) ── */
 html.terminal {
-  --bg:  #0a0a00;
-  --bg2: #121200;
-  --bg3: #1a1a00;
-  --bg4: #242400;
-  --border:  rgba(251, 191, 36, 0.12);
-  --border2: rgba(251, 191, 36, 0.25);
-  --accent:  #fbbf24;
-  --accent2: #fcd34d;
-  --cyan:   #facc15;
-  --green:  #a3e635;
-  --amber:  #fbbf24;
-  --red:    #f87171;
-  --blue:   #fde047;
-  --purple: #fdba74;
-  --pink:   #fb923c;
-  --orange: #fbbf24;
-  --text:  #fde68a;
-  --text2: #fcd34d;
-  --muted: #a16207;
-  --dim:   #713f12;
-  --glass: rgba(251, 191, 36, 0.03);
-  --glow:  0 0 20px rgba(251, 191, 36, 0.25);
-  --font:  "JetBrains Mono", "SF Mono", "Fira Code", monospace;
+  /* Semantic tokens — amber/Bloomberg terminal palette mapped onto the names */
+  color-scheme: dark;
+  --paper: #0a0a00;
+  --surface: #121200;
+  --surface-2: #1a1a00;
+  --inset: #242400;
+  --strip: #1a1a00;
+  --ink: #fde68a;
+  --ink-2: #fcd34d;
+  --ink-3: #fbbf24;
+  --ink-4: #a16207;
+  --hairline: rgba(251, 191, 36, 0.12);
+  --green: #a3e635;
+  --green-ink: #fbbf24;
+  --green-tint: #1c1c00;
+  --green-tint-2: #1e1e00;
+  --green-soft: #d9f99d;
+  --amber-ink: #fbbf24;
+  --amber-tint: #3a2c18;
+  --amber-dot: #fbbf24;
+  --idle: #2b2b00;
 
-  /* Digest panel */
+  /* Legacy aliases */
+  --bg: var(--paper);
+  --bg2: var(--surface);
+  --bg3: var(--surface-2);
+  --bg4: var(--inset);
+  --text: var(--ink);
+  --text2: var(--ink-2);
+  --muted: var(--ink-3);
+  --dim: var(--ink-4);
+  --accent: var(--green-ink);
+  --accent2: var(--green);
+  --border: var(--hairline);
+  --border2: color-mix(in srgb, var(--ink) 18%, transparent);
+
+  /* Categorical palette — data-viz only */
+  --cyan: #facc15;
+  --amber: #fbbf24;
+  --red: #f87171;
+  --blue: #fde047;
+  --purple: #fdba74;
+  --pink: #fb923c;
+  --orange: #fbbf24;
+
+  /* Translucent green helpers — derived from the semantic green */
+  --green-faint: color-mix(in srgb, var(--green) 8%, transparent);
+  --green-line: color-mix(in srgb, var(--green) 45%, transparent);
+
+  --glass: rgba(251, 191, 36, 0.03);
+  --glow: 0 0 20px rgba(251, 191, 36, 0.25);
+  --font: "JetBrains Mono", "SF Mono", "Fira Code", monospace;
+
+  /* Digest panel — explicit, never aliased */
   --text-dim: #a16207;
   --card: #121200;
 }
@@ -2679,5 +3336,324 @@ html.terminal .panel {
 }
 html.terminal .ticker-item a,
 html.terminal .news-title a:hover {
-  color: var(--text);
+  color: var(--ink);
+}
+
+/* ── Intelligence stats popover (trigger: the live pill) ──
+   Anchored under the pill and overlays the page: no backdrop, no blur, and
+   the text behind stays crisp. Non-modal by design. */
+.stats-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 20;
+  display: none;
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  padding: 18px 22px 16px;
+  min-width: 268px;
+  max-width: calc(100vw - 32px);
+  box-shadow: var(--shadow-lg);
+}
+.stats-popover.open {
+  display: block;
+}
+.stats-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 10px;
+}
+.stats-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+}
+.stats-close {
+  border: 0;
+  background: none;
+  color: var(--ink-3);
+  font-size: 1.2rem;
+  line-height: 1;
+  padding: 0 2px;
+  cursor: pointer;
+}
+.stats-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--hairline);
+  font-family: var(--mono);
+  font-size: 12.5px;
+}
+.stats-label {
+  color: var(--ink-3);
+}
+.stats-figure {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.stats-value {
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 15px;
+}
+.stats-sub {
+  color: var(--ink-4);
+  font-size: 11.5px;
+}
+.stats-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 18px;
+  padding: 2px 0 8px;
+}
+.stats-bar {
+  width: 5px;
+  border-radius: 1px;
+  background: var(--green);
+}
+.stats-bar.dim {
+  background: var(--green-soft);
+}
+.stats-empty {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-4);
+}
+
+/* ── Mobile polish (2026-09-20) ──
+   Phones were reading desktop chrome at desktop scale: three filled 44px
+   circles crowded the header (squeezing the live pill onto two lines), the
+   bottom nav drew a full-height solid pill, and the edition/briefing type
+   carried the 1280px measure. This quietens the chrome and steps the
+   document type down. Tap targets stay >=44px (Story 6.8) — only the visible
+   chrome shrinks. */
+@media (max-width: 899px) {
+  /* Header: wordmark + two ghost icon controls + a compact live chip. The
+     archive pill duplicates the bottom nav's `editions`, so it goes. */
+  .header {
+    gap: 8px;
+  }
+  .header-right {
+    gap: 4px;
+  }
+  .header-link {
+    display: none;
+  }
+
+  /* Raised specificity: the light/terminal theme blocks set fills on these
+     controls from `html.light …`, which outranks a bare class, so the
+     transparent/ghost treatment has to win on its own merits. */
+  .header .header-right .search-trigger {
+    min-width: 44px;
+    width: 44px;
+    padding: 0;
+    justify-content: center;
+    background: transparent;
+    border-color: transparent;
+    color: var(--ink-3);
+  }
+  .header .header-right .search-trigger span {
+    display: none;
+  }
+
+  .header .header-right .theme-toggle {
+    background: transparent;
+  }
+  .header .header-right .search-trigger svg,
+  .header .header-right .theme-toggle svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .status-badge {
+    white-space: nowrap;
+    flex: none;
+    gap: 5px;
+    padding: 3px 9px;
+    font-size: 10px;
+  }
+  #sourceCount {
+    white-space: nowrap;
+  }
+
+  /* Bottom nav: a compact, centred segmented control (iOS-style), not three
+     full-width blocks. `:root` outranks `html.light .nav-pill.active`. */
+  /* Shorter than the 44px default. Opaque: the translucent/blurred bar read
+     worse than solid chrome against the paper. */
+  .bottom-nav {
+    justify-content: center;
+    gap: 2px;
+    padding: 4px 10px calc(4px + env(safe-area-inset-bottom, 0px));
+    background: var(--surface);
+  }
+  :root .bottom-nav .nav-pill {
+    flex: 0 1 auto;
+    min-width: 84px;
+    min-height: 38px;
+    padding: 6px 16px;
+    border-radius: 9px;
+    font-size: 12.5px;
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+  }
+  :root .bottom-nav .nav-pill:hover {
+    transform: none;
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    color: var(--green-ink);
+  }
+  :root .bottom-nav .nav-pill.active {
+    background: var(--green-tint);
+    border-color: transparent;
+    color: var(--green-ink);
+    box-shadow: none;
+  }
+
+  /* Ticker: 12px mono is desktop-sized. Pin the size on the item and its link
+     too — they must not drift from the band, and long arXiv titles were
+     reading oversized where a glyph fell back. */
+  .ticker,
+  .ticker .ticker-item,
+  .ticker .ticker-src,
+  .ticker .ticker-item a {
+    font-size: 10px;
+  }
+  .ticker {
+    padding-top: 7px;
+    padding-bottom: 7px;
+  }
+  .ticker-item {
+    margin-right: 20px;
+  }
+
+  /* Streams filter bar: chips wrap onto their own rows instead of being
+     squeezed to ellipses, and the square 44x44 touch rule that turned the
+     one-word `all` chip into a circle is dropped — it stays a pill. */
+  .view-toolbar {
+    flex-wrap: wrap;
+    row-gap: 8px;
+    padding: 8px 10px;
+  }
+  .filter-chip {
+    flex: 0 0 auto;
+    min-width: 0;
+    min-height: 34px;
+    padding: 6px 12px;
+    font-size: 11.5px;
+    white-space: nowrap;
+  }
+  .view-toolbar .sort {
+    margin-left: 0;
+  }
+  .health-tally {
+    font-size: 11.5px;
+  }
+
+  /* Edition reader: honest phone type, not the 1280px measure. */
+  .edition-reader {
+    padding: 18px 16px 20px;
+  }
+  .edition-wordmark {
+    font-size: 14px;
+  }
+  .edition-lede {
+    font-size: 15.5px;
+    line-height: 1.5;
+  }
+  .edition-section-label {
+    font-size: 10px;
+    margin: 16px 0 4px;
+  }
+  .edition-reader .hairline {
+    margin: 12px 0;
+  }
+  .edition-story {
+    grid-template-columns: 18px 1fr;
+    gap: 9px;
+    padding: 11px 0;
+  }
+  .edition-rank {
+    font-size: 14px;
+  }
+  .edition-headline {
+    font-size: 15.5px;
+  }
+  .edition-summary {
+    font-size: 13.5px;
+  }
+  .edition-foot {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  /* Briefing head: the label and the byline each wrap mid-phrase when they
+     share one row on a phone. Stack them, and ellipsize the byline (the model
+     id is long) instead of breaking it. */
+  .briefing-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    font-size: 10.5px;
+  }
+  .briefing-label,
+  .briefing-by {
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Landing (today): drop the story row's right meta column and stack the meta
+     under the headline rather than squeezing three columns onto a phone. The
+     whole scale steps down a notch — a dense read, not a desktop page. */
+  .analysis-summary {
+    font-size: 20px;
+    line-height: 1.3;
+    -webkit-line-clamp: 4;
+  }
+  .section-label {
+    font-size: 10px;
+  }
+  .story-row {
+    grid-template-columns: 20px minmax(0, 1fr);
+    gap: 8px 10px;
+    padding: 11px 4px;
+    margin: 0 -4px;
+  }
+  .story-meta {
+    grid-column: 2;
+    text-align: left;
+    font-size: 11px;
+  }
+  .story-headline {
+    font-size: 15.5px;
+  }
+  .story-why {
+    font-size: 13.5px;
+  }
+  .story-rank {
+    font-size: 14px;
+  }
+  .more-title {
+    font-size: 13px;
+  }
+  .trend-text {
+    font-size: 13.5px;
+  }
+  .logo h1 {
+    font-size: 1rem;
+  }
 }

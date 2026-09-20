@@ -42,6 +42,28 @@ export function sanitizeUrl(str) {
 }
 
 /**
+ * Sanitize the LLM analysis object (`{summary,topStories,trends,modelRadar,
+ * signals}`). The model's output is untrusted — source text can prompt-inject
+ * it — and its `url` fields become clickable links in the client, so they must
+ * be scheme-checked (http/https only) before broadcast. Non-object array
+ * entries are dropped: the client renders them as rows and would otherwise
+ * throw on `null`/primitive elements. Text fields stay untouched here (the
+ * client's `esc()` is the XSS layer for text nodes).
+ */
+export function sanitizeAnalysis(analysis) {
+  if (!analysis || typeof analysis !== "object") return analysis;
+  const clean = { ...analysis };
+  for (const key of ["topStories", "modelRadar", "signals"]) {
+    if (Array.isArray(analysis[key])) {
+      clean[key] = analysis[key]
+        .filter((entry) => entry && typeof entry === "object" && !Array.isArray(entry))
+        .map((entry) => ({ ...entry, url: sanitizeUrl(entry.url) }));
+    }
+  }
+  return clean;
+}
+
+/**
  * Sanitize all string fields in an item object (shallow).
  * URL-like fields get URL sanitization; others get text sanitization.
  */
@@ -123,6 +145,85 @@ export function sanitizeDigest(digest) {
   // communityBuzz[]: plain strings
   if (Array.isArray(digest.communityBuzz)) {
     clean.communityBuzz = digest.communityBuzz.map((b) => sanitizeText(b));
+  }
+
+  return clean;
+}
+
+/**
+ * Sanitize all user-visible string fields in a daily edition object
+ * (TL;DR-newsletter schema: topStories, modelReleases, paperPick,
+ * communityBuzz). Unknown top-level fields pass through unchanged.
+ * Safe to call if optional arrays or the paperPick object are absent.
+ */
+export function sanitizeDailyEdition(edition) {
+  if (!edition || typeof edition !== "object") return edition;
+
+  const clean = { ...edition };
+
+  // Top-level strings
+  if (edition.dateOf !== undefined) clean.dateOf = sanitizeText(edition.dateOf);
+  if (edition.tldr !== undefined) clean.tldr = sanitizeText(edition.tldr);
+
+  // topStories[]: { title, body, category, impact, url }
+  if (Array.isArray(edition.topStories)) {
+    clean.topStories = edition.topStories
+      .filter((t) => t && typeof t === "object" && !Array.isArray(t))
+      .map((t) => ({
+        ...t,
+        title: sanitizeText(t.title),
+        body: sanitizeText(t.body),
+        category: sanitizeText(t.category),
+        impact: sanitizeText(t.impact),
+        url: sanitizeUrl(t.url),
+      }));
+  }
+
+  // modelReleases[]: { name, org, summary, url }
+  if (Array.isArray(edition.modelReleases)) {
+    clean.modelReleases = edition.modelReleases
+      .filter((m) => m && typeof m === "object" && !Array.isArray(m))
+      .map((m) => ({
+        ...m,
+        name: sanitizeText(m.name),
+        org: sanitizeText(m.org),
+        summary: sanitizeText(m.summary),
+        url: sanitizeUrl(m.url),
+      }));
+  }
+
+  // paperPick: single { title, authors, insight, url }
+  if (
+    edition.paperPick !== undefined &&
+    edition.paperPick &&
+    typeof edition.paperPick === "object" &&
+    !Array.isArray(edition.paperPick)
+  ) {
+    const p = edition.paperPick;
+    clean.paperPick = {
+      ...p,
+      title: sanitizeText(p.title),
+      authors: sanitizeText(p.authors),
+      insight: sanitizeText(p.insight),
+      url: sanitizeUrl(p.url),
+    };
+  }
+
+  // quickLinks[]: { text, url }
+  if (Array.isArray(edition.quickLinks)) {
+    clean.quickLinks = edition.quickLinks
+      .filter((l) => l && typeof l === "object" && !Array.isArray(l))
+      .map((l) => ({
+        ...l,
+        text: sanitizeText(l.text),
+        url: sanitizeUrl(l.url),
+      }));
+  }
+
+  // communityBuzz[]: plain strings — legacy shape, kept so editions saved
+  // before the quickLinks switch still sanitize and render.
+  if (Array.isArray(edition.communityBuzz)) {
+    clean.communityBuzz = edition.communityBuzz.map((b) => sanitizeText(b));
   }
 
   return clean;

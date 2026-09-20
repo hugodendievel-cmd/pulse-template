@@ -4,7 +4,7 @@ import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import { createHash } from "node:crypto";
 import { readFileSync, readdirSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   runDigestSweep,
@@ -13,7 +13,7 @@ import {
   SOURCE_NAMES,
 } from "./apis/briefing.mjs";
 import "./apis/utils/env.mjs";
-import { loadDomain } from "./domains/index.mjs";
+import { loadDomain, normalizeViews } from "./domains/index.mjs";
 import { computeDelta, getPrevious, pushSweep } from "./lib/delta/index.mjs";
 import { loadLatestDigest, saveDigest } from "./lib/digest/store.mjs";
 import { weekIdBrussels } from "./lib/digest/week-id.mjs";
@@ -25,6 +25,19 @@ import {
 } from "./lib/llm/budget.mjs";
 import { createLLMProvider } from "./lib/llm/index.mjs";
 import { generateWeeklyDigest } from "./lib/llm/weekly-digest.mjs";
+import { generateDailyEditionPipeline } from "./lib/newsletter/pipeline.mjs";
+import { startNewsletterScheduler } from "./lib/newsletter/scheduler.mjs";
+import {
+  listDailyEditions,
+  loadDailyEdition,
+  loadLatestDailyEdition,
+} from "./lib/newsletter/store.mjs";
+import {
+  renderDailyEditionHtml,
+  renderEmptyArchiveHtml,
+  renderWeeklyDigestHtml,
+  renderNotFoundHtml,
+} from "./lib/newsletter/render.mjs";
 import log from "./lib/logger.mjs";
 import { shouldTriggerSweep } from "./lib/sweep-cooldown.mjs";
 import { createSweepProgressTracker } from "./lib/sweep-progress.mjs";
@@ -36,12 +49,23 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // browsers on stale CSS/JS for up to an hour after deploy — hashing the files
 // makes any asset change produce new URLs automatically.
 const ASSET_VERSION = (() => {
-  const dir = resolve(__dirname, "dashboard", "public");
+  const root = resolve(__dirname, "dashboard", "public");
   const hash = createHash("sha256");
-  for (const name of readdirSync(dir).sort()) {
-    hash.update(name);
-    hash.update(readFileSync(resolve(dir, name)));
-  }
+  const walk = (dir) => {
+    const entries = readdirSync(dir, { withFileTypes: true }).sort((a, b) =>
+      a.name.localeCompare(b.name),
+    );
+    for (const ent of entries) {
+      const path = resolve(dir, ent.name);
+      if (ent.isDirectory()) {
+        walk(path);
+      } else {
+        hash.update(relative(root, path));
+        hash.update(readFileSync(path));
+      }
+    }
+  };
+  walk(root);
   return hash.digest("hex").slice(0, 12);
 })();
 
@@ -54,8 +78,9 @@ function escapeHtml(s) {
     .replace(/"/g, "&quot;");
 }
 
-// "AI Pulse" → AI<span>PULSE</span> (first word plain, rest uppercased in
-// the span — reproduces the original logo/loading markup for any pack name).
+// "Acme Corp" → AI<span>PULSE</span> style wordmark (first word plain, rest
+// uppercased in the span) — reproduces the logo/loading markup for any pack.
+// Example: "AI Pulse" → AI<span>PULSE</span>.
 function pulseNameHtml(name) {
   const words = escapeHtml(name).split(" ");
   const first = words.shift();
@@ -68,6 +93,21 @@ function pulseNameHtml(name) {
 function creditHtml(credit) {
   if (!credit?.text || !credit?.url) return "";
   return `<a class="logo-credit" href="${escapeHtml(credit.url)}" target="_blank" rel="noopener">${escapeHtml(credit.text)}</a>`;
+}
+
+// "Daily Edition" header-right pill linking the public archive — engine
+// feature (not pack chrome), so it ships in every domain. Sits beside the
+// search trigger; keeps its icon (label hidden) on mobile.
+function newsletterLinkHtml() {
+  return `<a class="header-link" href="/newsletter" title="Daily editions — public archive"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false"><use href="#ic-list"/></svg><span>archive</span></a>`;
+}
+
+// Optional environment label ("acc", "staging", …) rendered as a small tag
+// beside the wordmark. A deployment that sets PULSE_ENV_LABEL shows it;
+// production leaves it unset, so nothing is added.
+function envTagHtml() {
+  const label = (process.env.PULSE_ENV_LABEL || "").trim();
+  return label ? `<span class="env-tag">${escapeHtml(label)}</span>` : "";
 }
 
 const PORT = Number.parseInt(process.env.PORT || "3200", 10);
@@ -87,6 +127,11 @@ const MAX_LLM_CALLS_PER_DAY = Number.parseInt(
   10,
 );
 
+// ── Newsletter generation (internal only) ──
+// No public trigger: the scheduler in boot() fires the shared pipeline daily
+// (catch-up after restarts); `npm run edition:save` is the operator CLI.
+const NEWSLETTER_RUN_AT = process.env.NEWSLETTER_RUN_AT || "07:30";
+
 let currentData = null;
 let llm = null;
 let domain = null; // active domain pack, set in boot()
@@ -94,8 +139,17 @@ let sweepCount = 0;
 let lastSweepTime = null;
 let lastSweepDurationMs = null;
 let sourceStats = {}; // per-source success/failure counts
+// Last LLM analysis outcome from the most recent sweep. `llm` says a provider
+// is configured; this says whether the briefing actually landed — otherwise a
+// configured-but-failing LLM is invisible from outside the logs.
+let lastAnalysis = {
+  state: "disabled",
+  detail: "LLM disabled",
+  at: null,
+};
 let sweepProgress = null;
 let sweepInProgress = false;
+let stopNewsletterScheduler = null; // set in boot() when the LLM is active
 
 // ── Trust proxy (Railway / Cloudflare) ──
 app.set("trust proxy", 1);
@@ -109,10 +163,10 @@ app.use(
         // 'unsafe-inline' required: Railway injects inline scripts whose hash
         // changes per deploy, making hash/nonce approaches impractical.
         scriptSrc: ["'self'", "'unsafe-inline'"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", "data:"],
         connectSrc: ["'self'"],
-        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        fontSrc: ["'self'"],
         objectSrc: ["'none'"],
         frameAncestors: ["'none'"],
         baseUri: ["'self'"],
@@ -154,8 +208,11 @@ app.get("/", (_req, res) => {
       .replaceAll("__PULSE_NAME_HTML__", pulseNameHtml(domain.name))
       .replaceAll("__PULSE_NAME__", escapeHtml(domain.name))
       .replaceAll("__PULSE_TAGLINE__", escapeHtml(domain.tagline ?? ""))
-      .replaceAll("__PULSE_CREDIT__", creditHtml(domain.credit));
+      .replaceAll("__PULSE_CREDIT__", creditHtml(domain.credit))
+      .replaceAll("__PULSE_NEWSLETTER_LINK__", newsletterLinkHtml());
   }
+  // Deployment-scoped, so it is replaced even without a domain.
+  html = html.replaceAll("__PULSE_ENV_TAG__", envTagHtml());
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Content-Type", "text/html");
   res.send(html);
@@ -177,13 +234,19 @@ app.get("/api/data", (_req, res) => {
   res.json(currentData);
 });
 
-// Active domain pack chrome: panels/stats/nav/colors/branding for the
+// Active domain pack chrome: panels/stats/views/colors/branding for the
 // dashboard to build itself from. No sources/prompts/freshSources leakage.
+// `views` is the normalized array (`nav` is internal-only): loadDomain
+// normalizes at load time (Story 1.1); the fallback covers a pack that
+// slipped through so the endpoint still serves a normalized array.
 app.get("/api/domain", (_req, res) => {
   if (!domain)
     return res.status(503).json({ error: "Domain pack not loaded yet" });
-  const { name, tagline, credit, panels, stats, nav, colors } = domain;
-  res.json({ name, tagline, credit, panels, stats, nav, colors });
+  const { name, tagline, credit, panels, stats, colors } = domain;
+  const views = Array.isArray(domain.views)
+    ? domain.views
+    : normalizeViews(domain);
+  res.json({ name, tagline, credit, panels, stats, views, colors });
 });
 
 app.get("/api/health", (_req, res) => {
@@ -194,8 +257,16 @@ app.get("/api/health", (_req, res) => {
     lastSweep: lastSweepTime,
     lastSweepDurationMs,
     llm: llm ? `${llm.name}/${llm.model}` : "disabled",
+    // Whether the briefing actually landed on the last sweep: `llm` only says
+    // a provider is configured. state: ok | error | skipped | disabled.
+    analysis: lastAnalysis,
     sourceCount: SOURCE_COUNT,
     sources: currentData?.sweep?.sourcesTotal || 0,
+    // Additive: lets the client compute `next sweep {n}s` without a new API.
+    cooldownMs: REFRESH_MS,
+    // Additive: the digest panel surfaces the once-per-week guard on render
+    // without duplicating ISO-week arithmetic (Story 4.4's cooldownMs precedent).
+    currentWeekId: weekIdBrussels(),
     sseClients: sseClients.size,
     llmBudget: (() => {
       const b = isBudgetExhausted({ cap: MAX_LLM_CALLS_PER_DAY });
@@ -206,6 +277,13 @@ app.get("/api/health", (_req, res) => {
         ...(b.exhausted ? { skipReason: b.skipReason } : {}),
       };
     })(),
+    // Deploy diagnostics: is a persistent data root configured, and which
+    // editions does this container actually see? (Railway filesystems are
+    // ephemeral — without PULSE_DATA_DIR + a mounted volume, redeploys wipe.)
+    persistence: {
+      dataDirConfigured: Boolean(process.env.PULSE_DATA_DIR),
+      editions: listDailyEditions(),
+    },
     sourceStats,
   });
 });
@@ -272,6 +350,75 @@ app.post("/api/digest/generate", async (req, res) => {
   } finally {
     digestGenerating = false;
   }
+});
+
+// ── Daily Edition API ──
+// Read-only: JSON mirror of the saved editions. Generation is internal
+// (scheduler + CLI) — there is deliberately no POST trigger.
+
+app.get("/api/newsletter", (_req, res) => {
+  const edition = loadLatestDailyEdition();
+  if (!edition)
+    return res.status(404).json({ error: "No daily edition available yet" });
+  res.json(edition);
+});
+
+// ── Newsletter archive (public pages) ──
+// Server-rendered by lib/newsletter/render.mjs — the same presentation layer
+// that becomes the Listmonk email body in phase 2.
+function sendNewsletterHtml(res, status, html) {
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.status(status).send(html);
+}
+
+app.get("/newsletter", (_req, res) => {
+  const editions = listDailyEditions();
+  if (editions.length === 0)
+    return sendNewsletterHtml(
+      res,
+      200,
+      renderEmptyArchiveHtml({ brand: domain ?? {} }),
+    );
+
+  const latest = loadLatestDailyEdition() ?? loadDailyEdition(editions[0]);
+  if (!latest)
+    return sendNewsletterHtml(
+      res,
+      404,
+      renderNotFoundHtml({ editionId: editions[0], brand: domain ?? {} }),
+    );
+  sendNewsletterHtml(
+    res,
+    200,
+    renderDailyEditionHtml(latest, { brand: domain ?? {}, editions, sourceCount: SOURCE_COUNT }),
+  );
+});
+
+// The weekly digest is a document, so it gets a page. The dashboard's rail
+// card links here instead of expanding thousands of px inside a 420px column.
+app.get("/digest", (_req, res) => {
+  const digest = loadLatestDigest();
+  sendNewsletterHtml(
+    res,
+    digest ? 200 : 404,
+    renderWeeklyDigestHtml(digest, { brand: domain ?? {} }),
+  );
+});
+
+app.get("/newsletter/:editionId", (req, res) => {
+  const edition = loadDailyEdition(req.params.editionId);
+  if (!edition)
+    return sendNewsletterHtml(
+      res,
+      404,
+      renderNotFoundHtml({ editionId: req.params.editionId, brand: domain ?? {} }),
+    );
+  sendNewsletterHtml(
+    res,
+    200,
+    renderDailyEditionHtml(edition, { brand: domain ?? {}, editions: listDailyEditions(), sourceCount: SOURCE_COUNT }),
+  );
 });
 
 // ── SSE ──
@@ -413,7 +560,7 @@ async function runLLMAnalysis(sweepData) {
     return {
       analysis: null,
       state: "error",
-      detail: "Briefing unavailable",
+      detail: "Briefing unavailable — the model returned no parseable JSON",
     };
   } catch (err) {
     log.error({ err: err.message }, "LLM analysis failed");
@@ -459,6 +606,13 @@ async function sweep() {
       llmResult = await runLLMAnalysis(sweepData);
       publishSweepProgress(progressTracker.finishLlm(llmResult));
     }
+
+    // Surface the outcome (ok / error / skipped / disabled) on /api/health.
+    lastAnalysis = {
+      state: llmResult.state,
+      detail: llmResult.detail,
+      at: new Date().toISOString(),
+    };
 
     currentData = {
       sweep: sweepData,
@@ -506,6 +660,22 @@ async function boot() {
 
   const { count: budgetCount, day: budgetDay } = loadBudget();
   log.info({ count: budgetCount, day: budgetDay }, "LLM budget loaded");
+
+  // Internal daily-edition scheduler — no external cron, no public trigger.
+  if (llm) {
+    stopNewsletterScheduler = startNewsletterScheduler(
+      () =>
+        generateDailyEditionPipeline(llm, {
+          prompt: domain.prompts.daily,
+          freshSources: domain.freshSources,
+          cap: MAX_LLM_CALLS_PER_DAY,
+          broadcast,
+        }),
+      { runAt: NEWSLETTER_RUN_AT },
+    );
+  } else {
+    log.info("Newsletter scheduler not started — LLM disabled");
+  }
 
   server = app.listen(PORT, () => {
     console.log(`\n  ┌─────────────────────────────────────────┐`);
@@ -557,6 +727,7 @@ async function boot() {
 // ── Graceful shutdown ──
 function shutdown(signal) {
   log.info({ signal }, "Shutting down gracefully…");
+  stopNewsletterScheduler?.();
   // Close SSE connections
   for (const client of sseClients) {
     try {

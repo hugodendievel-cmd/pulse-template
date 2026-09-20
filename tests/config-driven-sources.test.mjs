@@ -170,18 +170,20 @@ describe("google-news — config.queries + opts.days", () => {
 });
 
 describe("uniform signature — remaining modules accept (config, opts)", () => {
-  it("theverge / venturebeat / simonwillison / producthunt / newsapi accept both args", async () => {
+  it("huggingface / theverge / venturebeat / simonwillison / producthunt / newsapi accept both args", async () => {
     const safeFetchText = vi
       .fn()
       .mockResolvedValue(`<?xml version="1.0"?><feed></feed>`);
     const safeFetch = vi.fn().mockResolvedValue([]);
     stubFetchModule({ safeFetch, safeFetchText });
+    const hf = await import("../apis/sources/huggingface.mjs");
     const tv = await import("../apis/sources/theverge.mjs");
     const vb = await import("../apis/sources/venturebeat.mjs");
     const sw = await import("../apis/sources/simonwillison.mjs");
     const ph = await import("../apis/sources/producthunt.mjs");
     const na = await import("../apis/sources/newsapi.mjs");
     // None of these may throw on (config, opts)
+    await hf.briefing({}, {});
     await tv.briefing({}, {});
     await vb.briefing({}, {});
     await sw.briefing({}, {});

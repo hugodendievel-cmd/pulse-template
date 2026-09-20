@@ -6,14 +6,35 @@
     <title>__PULSE_NAME__ — Intelligence Dashboard</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg" />
     <meta name="theme-color" content="#f5f1e9" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
-      rel="stylesheet"
-    />
     <meta name="description" content="__PULSE_NAME__ — __PULSE_TAGLINE__" />
     <link rel="stylesheet" href="style.css" />
+    <!-- Applied before first paint so the OS theme (or a saved choice) is in
+         place immediately: without this the :root dark default flashes for
+         users on a light system. Kept in sync with initTheme() in app.js. -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("pulse-theme");
+          var mode =
+            saved === "light" || saved === "dark" || saved === "terminal"
+              ? saved
+              : "auto";
+          var resolved =
+            mode === "auto"
+              ? window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light"
+              : mode;
+          if (resolved === "light")
+            document.documentElement.classList.add("light");
+          else if (resolved === "terminal")
+            document.documentElement.classList.add("terminal");
+          document.documentElement.dataset.themeMode = mode;
+        } catch (e) {
+          /* storage blocked — the :root default still paints */
+        }
+      })();
+    </script>
   </head>
   <body>
     <!-- Icon Sprite (reused via <use>) -->
@@ -56,283 +77,11 @@
         <symbol id="ic-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
         </symbol>
+        <symbol id="ic-articles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+        </symbol>
       </defs>
     </svg>
-
-    <!-- Loading Screen -->
-    <div class="loading-screen" id="loading">
-      <div class="loading-orb">
-        <svg
-          class="orb-icon"
-          viewBox="0 0 64 64"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <!-- Central brain node -->
-          <circle cx="32" cy="32" r="6" fill="rgba(255,255,255,0.9)" />
-          <!-- Outer nodes -->
-          <circle cx="32" cy="12" r="3.5" fill="rgba(255,255,255,0.7)" />
-          <circle cx="50" cy="22" r="3.5" fill="rgba(255,255,255,0.7)" />
-          <circle cx="50" cy="42" r="3.5" fill="rgba(255,255,255,0.7)" />
-          <circle cx="32" cy="52" r="3.5" fill="rgba(255,255,255,0.7)" />
-          <circle cx="14" cy="42" r="3.5" fill="rgba(255,255,255,0.7)" />
-          <circle cx="14" cy="22" r="3.5" fill="rgba(255,255,255,0.7)" />
-          <!-- Connections from center to outer -->
-          <line
-            x1="32"
-            y1="26"
-            x2="32"
-            y2="15.5"
-            stroke="rgba(255,255,255,0.4)"
-            stroke-width="1.5"
-            stroke-linecap="round"
-          />
-          <line
-            x1="37"
-            y1="28"
-            x2="47"
-            y2="24"
-            stroke="rgba(255,255,255,0.4)"
-            stroke-width="1.5"
-            stroke-linecap="round"
-          />
-          <line
-            x1="37"
-            y1="36"
-            x2="47"
-            y2="40"
-            stroke="rgba(255,255,255,0.4)"
-            stroke-width="1.5"
-            stroke-linecap="round"
-          />
-          <line
-            x1="32"
-            y1="38"
-            x2="32"
-            y2="48.5"
-            stroke="rgba(255,255,255,0.4)"
-            stroke-width="1.5"
-            stroke-linecap="round"
-          />
-          <line
-            x1="27"
-            y1="36"
-            x2="17"
-            y2="40"
-            stroke="rgba(255,255,255,0.4)"
-            stroke-width="1.5"
-            stroke-linecap="round"
-          />
-          <line
-            x1="27"
-            y1="28"
-            x2="17"
-            y2="24"
-            stroke="rgba(255,255,255,0.4)"
-            stroke-width="1.5"
-            stroke-linecap="round"
-          />
-          <!-- Cross connections -->
-          <line
-            x1="32"
-            y1="15.5"
-            x2="47"
-            y2="24"
-            stroke="rgba(255,255,255,0.15)"
-            stroke-width="1"
-            stroke-linecap="round"
-          />
-          <line
-            x1="47"
-            y1="24"
-            x2="47"
-            y2="40"
-            stroke="rgba(255,255,255,0.15)"
-            stroke-width="1"
-            stroke-linecap="round"
-          />
-          <line
-            x1="47"
-            y1="40"
-            x2="32"
-            y2="48.5"
-            stroke="rgba(255,255,255,0.15)"
-            stroke-width="1"
-            stroke-linecap="round"
-          />
-          <line
-            x1="32"
-            y1="48.5"
-            x2="17"
-            y2="40"
-            stroke="rgba(255,255,255,0.15)"
-            stroke-width="1"
-            stroke-linecap="round"
-          />
-          <line
-            x1="17"
-            y1="40"
-            x2="17"
-            y2="24"
-            stroke="rgba(255,255,255,0.15)"
-            stroke-width="1"
-            stroke-linecap="round"
-          />
-          <line
-            x1="17"
-            y1="24"
-            x2="32"
-            y2="15.5"
-            stroke="rgba(255,255,255,0.15)"
-            stroke-width="1"
-            stroke-linecap="round"
-          />
-        </svg>
-      </div>
-      <div class="loading-stage" id="loadingStage">INITIALIZING</div>
-      <div class="loading-title">__PULSE_NAME_HTML__</div>
-      <div class="loading-sub">Preparing live intelligence sweep…</div>
-      <div class="loading-meta">
-        <span id="loadingPercent">0%</span>
-        <span id="loadingCounts">Waiting for sweep</span>
-      </div>
-      <div class="loading-bar">
-        <div class="loading-bar-inner" id="loadingBar"></div>
-      </div>
-      <div class="loading-steps" id="loadingSteps" aria-live="polite"></div>
-    </div>
-
-    <!-- Header -->
-    <header class="header">
-      <button class="hamburger" id="hamburgerBtn" aria-label="Menu">
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-        >
-          <line x1="3" y1="6" x2="21" y2="6" />
-          <line x1="3" y1="12" x2="21" y2="12" />
-          <line x1="3" y1="18" x2="21" y2="18" />
-        </svg>
-      </button>
-      <div class="header-left">
-        <div class="logo">
-          <div class="logo-mark">
-            <svg width="20" height="20" viewBox="0 0 64 64" fill="none">
-              <circle cx="32" cy="32" r="30" fill="var(--accent)" />
-              <circle cx="32" cy="32" r="5" fill="rgba(255,255,255,0.9)" />
-              <circle cx="32" cy="14" r="3" fill="rgba(255,255,255,0.7)" />
-              <circle cx="48" cy="23" r="3" fill="rgba(255,255,255,0.7)" />
-              <circle cx="48" cy="41" r="3" fill="rgba(255,255,255,0.7)" />
-              <circle cx="32" cy="50" r="3" fill="rgba(255,255,255,0.7)" />
-              <circle cx="16" cy="41" r="3" fill="rgba(255,255,255,0.7)" />
-              <circle cx="16" cy="23" r="3" fill="rgba(255,255,255,0.7)" />
-              <g stroke="rgba(255,255,255,0.4)" stroke-width="1.5">
-                <line x1="32" y1="27" x2="32" y2="17" />
-                <line x1="36" y1="29" x2="45" y2="25" />
-                <line x1="36" y1="35" x2="45" y2="39" />
-                <line x1="32" y1="37" x2="32" y2="47" />
-                <line x1="28" y1="35" x2="19" y2="39" />
-                <line x1="28" y1="29" x2="19" y2="25" />
-              </g>
-            </svg>
-          </div>
-          <h1>__PULSE_NAME_HTML__</h1>
-          __PULSE_CREDIT__
-        </div>
-        <nav class="header-nav" id="headerNav"></nav>
-      </div>
-      <div class="header-right">
-        <button class="search-trigger" id="searchTrigger" title="Search (⌘K)">
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.35-4.35" />
-          </svg>
-          <span>Search…</span>
-          <kbd>⌘K</kbd>
-        </button>
-        <button
-          class="kbd-help-btn"
-          id="kbdHelpBtn"
-          title="Keyboard shortcuts (?)"
-          aria-label="Show keyboard shortcuts"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <rect x="2" y="4" width="20" height="16" rx="2" />
-            <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M10 12h.01M14 12h.01M18 12h.01M7 16h10" />
-          </svg>
-        </button>
-        <button
-          class="collapse-all-btn"
-          id="collapseAllBtn"
-          title="Collapse / Expand all panels"
-          aria-label="Collapse or expand all panels"
-        >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M6 9l6 6 6-6" />
-          </svg>
-        </button>
-        <button
-          class="theme-toggle"
-          id="themeToggle"
-          title="Toggle light/dark mode"
-          aria-label="Toggle light or dark mode"
-          aria-pressed="false"
-        >
-          <svg
-            class="icon-sun"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <circle cx="12" cy="12" r="5" />
-            <path
-              d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
-            />
-          </svg>
-          <svg
-            class="icon-moon"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-          </svg>
-        </button>
-        <div class="status-badge" id="sourceCount" role="status" aria-live="polite">
-          <span class="status-dot loading" id="statusDot" aria-hidden="true"></span>
-          <span id="statusText">INIT</span>
-          <span class="status-sep" aria-hidden="true">·</span>
-          <span id="sweepTime">—</span>
-          <span class="status-sep" aria-hidden="true">·</span>
-          <span id="sourceCountText">0/?</span>
-        </div>
-      </div>
-    </header>
 
     <!-- Command Palette / Search -->
     <div class="command-overlay" id="commandOverlay">
@@ -354,6 +103,7 @@
             class="command-input"
             id="commandInput"
             placeholder="Search articles, models, papers…"
+            aria-label="Search articles, models, papers"
             autocomplete="off"
           />
           <kbd>ESC</kbd>
@@ -362,14 +112,108 @@
       </div>
     </div>
 
-    <!-- News Ticker -->
-    <div class="ticker"><div class="ticker-inner" id="ticker"></div></div>
+    <div class="shell">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <div class="logo">
+          <div class="logo-row">
+            <h1>__PULSE_NAME_HTML__</h1>
+            __PULSE_ENV_TAG__
+          </div>
+          __PULSE_CREDIT__
+        </div>
+        <nav class="header-nav" id="headerNav"></nav>
+      </div>
+      <div class="header-right">
+        __PULSE_NEWSLETTER_LINK__
+        <button class="search-trigger" id="searchTrigger" title="Search (⌘K)">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+          </svg>
+          <span id="searchTriggerLabel">Search…</span>
+          <kbd>⌘K</kbd>
+        </button>
+        <button
+          class="theme-toggle"
+          id="themeToggle"
+          title="Theme: light / dark / auto (T)"
+          aria-label="Theme"
+          aria-pressed="false"
+        >
+          <svg class="icon-sun" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.5" />
+            <path d="M12 2v2.5M12 19.5V22M4.22 4.22l1.77 1.77M18.01 18.01l1.77 1.77M2 12h2.5M19.5 12H22M4.22 19.78l1.77-1.77M18.01 5.99l1.77-1.77" />
+          </svg>
+          <svg class="icon-moon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+          <!-- Auto: a half-filled circle (the OS is driving the theme) -->
+          <svg class="icon-auto" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor" stroke="none" />
+          </svg>
+        </button>
+        <button
+          class="status-badge"
+          id="statsTrigger"
+          type="button"
+          aria-haspopup="dialog"
+          aria-controls="statsDialog"
+          aria-expanded="false"
+          title="Intelligence stats"
+        >
+          <span class="status-dot" id="statusDot" aria-hidden="true"></span>
+          <span id="sourceCount" role="status" aria-live="polite" aria-atomic="false">
+            <span id="statusText">INIT</span>
+            <span class="status-sep" aria-hidden="true">·</span>
+            <span id="sourceCountText">0/?</span>
+          </span>
+        </button>
+        <!-- Intelligence stats popover — anchored under the live pill, overlays
+             the page without a backdrop. Non-modal by design. -->
+        <div
+          class="stats-popover"
+          id="statsDialog"
+          role="dialog"
+          aria-labelledby="statsTitle"
+        >
+          <div class="stats-head">
+            <span class="stats-title" id="statsTitle">intelligence</span>
+            <button class="stats-close" id="statsClose" type="button" aria-label="Close">&times;</button>
+          </div>
+          <div class="stats-body" id="statsBody"></div>
+        </div>
+      </div>
+    </header>
 
-    <!-- Stats Bar (cards built at runtime from /api/domain; freshness ring appended last) -->
-    <div class="stats-bar" id="statsBar" style="display: none"></div>
+    <!-- News Ticker (design 3a item 3): label, │ separator, then the marquee -->
+    <div class="ticker">
+      <span class="ticker-label">ticker</span>
+      <span class="ticker-sep" aria-hidden="true">│</span>
+      <div class="ticker-viewport">
+        <div class="ticker-inner" id="ticker"></div>
+      </div>
+    </div>
+
+    <!-- Polite announcer for updates that have no live region of their own
+         (Story 6.8): a delta badge is inserted silently, so its arrival is
+         spoken here without moving focus. Empty until the first announcement. -->
+    <div class="sr-only" id="liveAnnouncer" role="status" aria-live="polite" aria-atomic="true"></div>
 
     <!-- Dashboard Grid (panels built at runtime from /api/domain) -->
-    <div class="dashboard" id="dashboard"></div>
+    <div class="dashboard" id="dashboard">
+      <!-- Single empty .view root; setView toggles panel membership on it. -->
+      <div class="view" id="viewRoot" data-view data-layout="grid"></div>
+    </div>
 
     <!-- Footer -->
     <footer class="footer">
@@ -386,7 +230,14 @@
       <span id="footerSources">Sources</span>
       <span class="footer-sep">·</span>
       <span>Real-time intelligence</span>
+      <span class="footer-keys">⌘K search · T theme · ? shortcuts</span>
     </footer>
+    </div>
+    <!-- /.shell -->
+
+    <!-- Bottom nav shell (view links built at runtime from /api/domain) -->
+    <nav class="bottom-nav" id="bottomNav"></nav>
+
 
     <!-- Keyboard Shortcuts Modal -->
     <div class="kbd-overlay" id="kbdOverlay" role="dialog" aria-modal="true" aria-labelledby="kbdTitle">
@@ -397,21 +248,11 @@
         </h3>
         <div class="kbd-row"><span>Open command palette / search</span><span class="kbd-combo"><kbd>⌘</kbd><kbd>K</kbd></span></div>
         <div class="kbd-row"><span>Close overlay / modal</span><span class="kbd-combo"><kbd>Esc</kbd></span></div>
-        <div class="kbd-row"><span>Toggle light / dark theme</span><span class="kbd-combo"><kbd>T</kbd></span></div>
+        <div class="kbd-row"><span>Cycle theme: light / dark / auto</span><span class="kbd-combo"><kbd>T</kbd></span></div>
         <div class="kbd-row"><span>Toggle terminal theme</span><span class="kbd-combo"><kbd>Shift</kbd><kbd>T</kbd></span></div>
         <div class="kbd-row"><span>Collapse / expand all panels</span><span class="kbd-combo"><kbd>C</kbd></span></div>
+        <div class="kbd-row"><span>Switch view 1 / 2 / 3</span><span class="kbd-combo"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd></span></div>
         <div class="kbd-row"><span>Show this help</span><span class="kbd-combo"><kbd>?</kbd></span></div>
-      </div>
-    </div>
-
-    <!-- Source Status Modal -->
-    <div class="source-modal-overlay" id="sourceModal">
-      <div class="source-modal">
-        <button class="source-modal-close" id="sourceModalClose">
-          &times;
-        </button>
-        <h3>Source Status</h3>
-        <div id="sourceModalBody"></div>
       </div>
     </div>
 
@@ -420,6 +261,6 @@
       import * as RC from "./render-core.mjs";
       window.RenderCore = RC;
     </script>
-    <script src="app.js"></script>
+    <script defer src="app.js"></script>
   </body>
 </html>

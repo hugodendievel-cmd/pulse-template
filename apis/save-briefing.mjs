@@ -3,8 +3,9 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { runSweep } from "./briefing.mjs";
 import "./utils/env.mjs";
+import { pulsePath } from "../lib/data-dir.mjs";
 
-const runsDir = resolve(process.cwd(), ".ai-pulse", "runs");
+const runsDir = pulsePath("runs");
 mkdirSync(runsDir, { recursive: true });
 
 const data = await runSweep();
@@ -13,4 +14,4 @@ const ts = new Date().toISOString().replace(/[:.]/g, "-");
 writeFileSync(resolve(runsDir, `${ts}.json`), JSON.stringify(data, null, 2));
 writeFileSync(resolve(runsDir, "latest.json"), JSON.stringify(data, null, 2));
 
-console.log(`[AI Pulse] Saved to runs/${ts}.json and runs/latest.json`);
+console.log(`[Pulse] Saved to runs/${ts}.json and runs/latest.json`);
